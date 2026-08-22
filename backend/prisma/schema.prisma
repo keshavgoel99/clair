@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  DONOR
+  NGO
+  VENDOR
+}
+
+enum PledgeStatus {
+  PLEDGED
+  LOCKED
+  UTILIZED
+  REFUNDED
+}
+
+enum ProcurementStatus {
+  CREATED
+  FUNDS_LOCKED
+  ORDERED
+  DELIVERED
+  VERIFICATION_PENDING
+  VERIFIED
+  PAYMENT_RELEASED
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+
+  pledges      Pledge[]
+  procurements Procurement[] @relation("NGOProcurements")
+  vendorOrders Procurement[] @relation("VendorProcurements")
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Campaign {
+  id           Int      @id @default(autoincrement())
+  title        String
+  description  String
+  category     String
+  target       Decimal
+  active       Boolean  @default(true)
+
+  pledges      Pledge[]
+  procurements Procurement[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Pledge {
+  id           Int          @id @default(autoincrement())
+  amount       Decimal
+  status       PledgeStatus @default(PLEDGED)
+
+  donorId      Int
+  donor        User         @relation(fields: [donorId], references: [id])
+
+  campaignId   Int
+  campaign     Campaign     @relation(fields: [campaignId], references: [id])
+
+  blockchainTx String?
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Procurement {
+  id           Int               @id @default(autoincrement())
+  title        String
+  description  String
+  amount       Decimal
+  status       ProcurementStatus @default(CREATED)
+
+  campaignId   Int
+  campaign     Campaign          @relation(fields: [campaignId], references: [id])
+
+  ngoId        Int
+  ngo          User              @relation("NGOProcurements", fields: [ngoId], references: [id])
+
+  vendorId     Int?
+  vendor       User?             @relation("VendorProcurements", fields: [vendorId], references: [id])
+
+  blockchainTx String?
+
+  documents    Document[]
+  verification Verification?
+
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model Document {
+  id            Int         @id @default(autoincrement())
+  type          String
+  fileUrl       String
+  documentHash  String?
+
+  procurementId Int
+  procurement   Procurement @relation(fields: [procurementId], references: [id])
+
+  createdAt     DateTime    @default(now())
+}
+
+model Verification {
+  id            Int         @id @default(autoincrement())
+  status        String
+  aiScore       Float?
+  aiResult      String?
+  reviewedAt    DateTime?
+
+  procurementId Int         @unique
+  procurement   Procurement @relation(fields: [procurementId], references: [id])
+
+  createdAt     DateTime    @default(now())
+}

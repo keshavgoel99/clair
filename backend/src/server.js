@@ -3,6 +3,8 @@ const cors = require('cors')
 require('dotenv').config()
 
 const authRoutes = require('./routes/authRoutes')
+const campaignRoutes = require('./routes/campaignRoutes')
+const pledgeRoutes = require('./routes/pledgeRoutes')
 
 const {
   authenticateToken,
@@ -36,7 +38,8 @@ app.get('/api/health', (req, res) => {
 // AUTH ROUTES
 
 app.use('/api/auth', authRoutes)
-
+app.use('/api/campaigns', campaignRoutes)
+app.use('/api/pledges', pledgeRoutes)
 
 // PROTECTED TEST ROUTE
 //

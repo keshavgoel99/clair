@@ -10,7 +10,26 @@ import PledgeModal from './components/PledgeModal'
 
 function App() {
   const [authPage, setAuthPage] = useState('login')
-  const [user, setUser] = useState(null)
+
+  /*
+   * Restore logged-in user from localStorage
+   * when the application starts.
+   */
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('clairUser')
+
+    if (!savedUser) {
+      return null
+    }
+
+    try {
+      return JSON.parse(savedUser)
+    } catch {
+      localStorage.removeItem('clairUser')
+      localStorage.removeItem('clairToken')
+      return null
+    }
+  })
 
   const [page, setPage] = useState('dashboard')
   const [selectedCampaign, setSelectedCampaign] = useState(null)
@@ -20,51 +39,35 @@ function App() {
   /*
    * LOGIN
    *
-   * Temporary mock authentication.
-   * Later this will call our Node.js backend.
+   * The Login page now communicates directly
+   * with our Node.js backend.
+   *
+   * App receives the authenticated user here.
    */
-  const handleLogin = (email) => {
-    let role = 'DONOR'
-
-    if (email.toLowerCase().includes('ngo')) {
-      role = 'NGO'
-    }
-
-    if (email.toLowerCase().includes('vendor')) {
-      role = 'VENDOR'
-    }
-
-    setUser({
-      name:
-        role === 'NGO'
-          ? 'Hope Relief Foundation'
-          : role === 'VENDOR'
-            ? 'ABC Relief Supplies'
-            : 'Donor',
-      email,
-      role,
-    })
-
+  const handleLogin = (loggedInUser) => {
+    setUser(loggedInUser)
+    setAuthPage('login')
     setPage('dashboard')
   }
 
   /*
    * REGISTER
+   *
+   * Registration is handled by the backend.
+   * After successful registration, the user
+   * can login normally.
    */
-  const handleRegister = ({ name, email, role }) => {
-    setUser({
-      name,
-      email,
-      role,
-    })
-
-    setPage('dashboard')
+  const handleRegister = (registeredUser) => {
+    setAuthPage('login')
   }
 
   /*
    * LOGOUT
    */
   const handleLogout = () => {
+    localStorage.removeItem('clairToken')
+    localStorage.removeItem('clairUser')
+
     setUser(null)
     setAuthPage('login')
   }
@@ -73,14 +76,20 @@ function App() {
    * DONOR PLEDGE
    */
   const handlePledge = (campaign) => {
-    if (!user) {
-      setAuthPage('login')
+    if (!user || user.role !== 'DONOR') {
       return
     }
 
     setSelectedCampaign(campaign)
   }
 
+  /*
+   * SUBMIT PLEDGE
+   *
+   * This is still frontend-only for now.
+   * Later we'll connect it to the backend
+   * and eventually the smart contract.
+   */
   const handleSubmitPledge = ({ campaign, amount }) => {
     const newPledge = {
       id: Date.now(),
@@ -97,6 +106,8 @@ function App() {
 
   /*
    * AUTHENTICATION GATE
+   *
+   * No user = no dashboard access.
    */
   if (!user) {
     if (authPage === 'register') {
@@ -118,8 +129,14 @@ function App() {
 
   /*
    * ROLE-BASED APPLICATION
+   *
+   * The role comes from the backend JWT/login response.
+   * It is no longer guessed from the email.
    */
 
+  /*
+   * NGO PORTAL
+   */
   if (user.role === 'NGO') {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -163,6 +180,9 @@ function App() {
     )
   }
 
+  /*
+   * VENDOR PORTAL
+   */
   if (user.role === 'VENDOR') {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -209,7 +229,6 @@ function App() {
   /*
    * DONOR APPLICATION
    */
-
   return (
     <div className="min-h-screen bg-slate-50">
 

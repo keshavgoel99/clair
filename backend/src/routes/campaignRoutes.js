@@ -27,6 +27,7 @@ router.get(
       const campaigns = await prisma.campaign.findMany({
         where: {
           active: true,
+          ngoId: req.user.id, 
         },
 
         include: {

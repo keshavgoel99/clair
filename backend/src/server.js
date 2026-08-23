@@ -7,6 +7,8 @@ const authRoutes = require('./routes/authRoutes')
 const campaignRoutes = require('./routes/campaignRoutes')
 const pledgeRoutes = require('./routes/pledgeRoutes')
 const procurementRoutes = require("./routes/procurementRoutes");
+const documentRoutes = require("./routes/documentRoutes");
+const verificationRoutes =  require("./routes/verificationRoutes");
 const {
   authenticateToken,
   authorizeRoles,
@@ -43,6 +45,8 @@ app.use('/api/campaigns', campaignRoutes)
 app.use('/api/pledges', pledgeRoutes)
 app.use("/api/procurements", procurementRoutes);
 app.use("/api/vendors", vendorRoutes);
+app.use("/api/documents", documentRoutes);
+app.use("/api/verifications", verificationRoutes);
 // PROTECTED TEST ROUTE
 //
 // Any authenticated user can access this.

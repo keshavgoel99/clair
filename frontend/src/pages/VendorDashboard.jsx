@@ -9,6 +9,10 @@ function VendorDashboard() {
   const [acceptingId, setAcceptingId] = useState(null);
   const [deliveringId, setDeliveringId] = useState(null);
   const [success, setSuccess] = useState("");
+
+const [documentType, setDocumentType] = useState("INVOICE");
+const [documentUrl, setDocumentUrl] = useState("");
+const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
   
 
   // =====================================================
@@ -192,6 +196,76 @@ const handleDeliver = async (
 
   } finally {
     setDeliveringId(null);
+  }
+};
+
+const handleUploadDocument = async (procurementId) => {
+  try {
+    setUploadingDocumentId(procurementId);
+    setError("");
+    setSuccess("");
+
+    if (!documentUrl.trim()) {
+      throw new Error(
+        "Please enter a document URL."
+      );
+    }
+
+    const token =
+      localStorage.getItem("clairToken");
+
+    if (!token) {
+      throw new Error(
+        "You are not logged in."
+      );
+    }
+
+    const response = await fetch(
+      "http://localhost:5000/api/documents",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          procurementId,
+          type: documentType,
+          fileUrl: documentUrl.trim(),
+        }),
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+          "Failed to upload document"
+      );
+    }
+
+    setSuccess(
+      "Document submitted successfully!"
+    );
+
+    setDocumentUrl("");
+
+    await fetchProcurements();
+
+  } catch (error) {
+    console.error(
+      "Document upload error:",
+      error
+    );
+
+    setError(error.message);
+
+  } finally {
+    setUploadingDocumentId(null);
   }
 };
 
@@ -522,6 +596,81 @@ const handleDeliver = async (
       ? "Marking Delivered..."
       : "Mark as Delivered"}
   </button>
+)}
+{procurement.status ===
+  "DELIVERED" && (
+
+  <div className="mt-5 border-t border-slate-200 pt-5">
+
+    <p className="font-semibold text-slate-800">
+      Submit Documents
+    </p>
+
+    <p className="mt-1 text-xs text-slate-500">
+      Submit an invoice, receipt or other
+      supporting document.
+    </p>
+
+
+    <select
+      value={documentType}
+      onChange={(e) =>
+        setDocumentType(
+          e.target.value
+        )
+      }
+      className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    >
+
+      <option value="INVOICE">
+        Invoice
+      </option>
+
+      <option value="DELIVERY_RECEIPT">
+        Delivery Receipt
+      </option>
+
+      <option value="IMAGE">
+        Delivery Image
+      </option>
+
+    </select>
+
+
+    <input
+      type="text"
+      value={documentUrl}
+      onChange={(e) =>
+        setDocumentUrl(
+          e.target.value
+        )
+      }
+      placeholder="Enter document URL"
+      className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+
+
+    <button
+      onClick={() =>
+        handleUploadDocument(
+          procurement.id
+        )
+      }
+      disabled={
+        uploadingDocumentId ===
+        procurement.id
+      }
+      className="mt-3 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+
+      {uploadingDocumentId ===
+      procurement.id
+        ? "Submitting..."
+        : "Submit Document"}
+
+    </button>
+
+  </div>
 )}
 
                       </div>

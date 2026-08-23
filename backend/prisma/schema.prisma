@@ -37,6 +37,8 @@ model User {
   passwordHash String
   role         UserRole
 
+  campaigns    Campaign[]
+
   pledges      Pledge[]
   procurements Procurement[] @relation("NGOProcurements")
   vendorOrders Procurement[] @relation("VendorProcurements")
@@ -53,6 +55,9 @@ model Campaign {
   target       Decimal
   active       Boolean  @default(true)
 
+  ngoId        Int
+  ngo          User     @relation(fields: [ngoId], references: [id])
+  
   pledges      Pledge[]
   procurements Procurement[]
 

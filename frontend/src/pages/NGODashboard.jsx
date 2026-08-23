@@ -226,12 +226,6 @@ const fetchProcurements = async () => {
       setCreateError("Campaign category is required.");
       return;
     }
-    if (!selectedVendor) {
-  setCreateError(
-    "Please select a vendor."
-  );
-  return;
-}
 
     if (!target || Number(target) <= 0) {
       setCreateError(
@@ -381,7 +375,6 @@ const fetchProcurements = async () => {
 
           amount:
             Number(procurementAmount),
-          vendorId: Number(selectedVendor),
         }),
       }
     );

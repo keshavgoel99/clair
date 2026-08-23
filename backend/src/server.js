@@ -2,10 +2,11 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
 
+const vendorRoutes = require("./routes/vendorRoutes");
 const authRoutes = require('./routes/authRoutes')
 const campaignRoutes = require('./routes/campaignRoutes')
 const pledgeRoutes = require('./routes/pledgeRoutes')
-
+const procurementRoutes = require("./routes/procurementRoutes");
 const {
   authenticateToken,
   authorizeRoles,
@@ -40,7 +41,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/campaigns', campaignRoutes)
 app.use('/api/pledges', pledgeRoutes)
-
+app.use("/api/procurements", procurementRoutes);
+app.use("/api/vendors", vendorRoutes);
 // PROTECTED TEST ROUTE
 //
 // Any authenticated user can access this.

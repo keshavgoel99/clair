@@ -18,6 +18,7 @@ function NGODashboard() {
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
 
+<<<<<<< HEAD
   const [showCreateProcurement, setShowCreateProcurement] =
   useState(false);
 
@@ -52,29 +53,101 @@ const [selectedVendor, setSelectedVendor] = useState("");
 const [loadingVendors, setLoadingVendors] = useState(false);
   // -----------------------------------------
   // FETCH CAMPAIGNS
+=======
+  // Create procurement form
+  const [showCreateProcurement, setShowCreateProcurement] =
+    useState(false);
+
+  const [procurementCampaign, setProcurementCampaign] =
+    useState(null);
+
+  const [procurementTitle, setProcurementTitle] =
+    useState("");
+
+  const [procurementDescription, setProcurementDescription] =
+    useState("");
+
+  const [procurementAmount, setProcurementAmount] =
+    useState("");
+
+  const [creatingProcurement, setCreatingProcurement] =
+    useState(false);
+
+  const [procurementError, setProcurementError] =
+    useState("");
+
+  const [procurementSuccess, setProcurementSuccess] =
+    useState("");
+
+  const [procurements, setProcurements] =
+    useState([]);
+
+  const [loadingProcurements, setLoadingProcurements] =
+    useState(true);
+
+  const [procurementFetchError, setProcurementFetchError] =
+    useState("");
+
+  // Vendors
+  const [vendors, setVendors] = useState([]);
+  const [selectedVendor, setSelectedVendor] =
+    useState("");
+
+  const [loadingVendors, setLoadingVendors] =
+    useState(false);
+
+
+  // -----------------------------------------
+  // FETCH DATA
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
   // -----------------------------------------
 
   useEffect(() => {
     fetchCampaigns();
     fetchProcurements();
+<<<<<<< HEAD
       fetchVendors();
   }, []);
 
+=======
+    fetchVendors();
+  }, []);
+
+
+  // -----------------------------------------
+  // FETCH CAMPAIGNS
+  // -----------------------------------------
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
   const fetchCampaigns = async () => {
     try {
       setLoadingCampaigns(true);
       setCampaignError("");
 
+<<<<<<< HEAD
       const token = localStorage.getItem("clairToken");
 
       if (!token) {
         throw new Error("You are not logged in.");
+=======
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       }
 
       const response = await fetch(
         "http://localhost:5000/api/campaigns",
         {
           method: "GET",
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -82,6 +155,7 @@ const [loadingVendors, setLoadingVendors] = useState(false);
         }
       );
 
+<<<<<<< HEAD
       const data = await response.json();
 
       if (!response.ok) {
@@ -94,10 +168,37 @@ const [loadingVendors, setLoadingVendors] = useState(false);
     } catch (error) {
       console.error("Error loading campaigns:", error);
       setCampaignError(error.message);
+=======
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to load campaigns"
+        );
+      }
+
+      setCampaigns(
+        data.campaigns || []
+      );
+
+    } catch (error) {
+      console.error(
+        "Error loading campaigns:",
+        error
+      );
+
+      setCampaignError(
+        error.message
+      );
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
     } finally {
       setLoadingCampaigns(false);
     }
   };
+<<<<<<< HEAD
   const fetchVendors = async () => {
   try {
     setLoadingVendors(true);
@@ -201,6 +302,129 @@ const fetchProcurements = async () => {
     setLoadingProcurements(false);
   }
 };
+=======
+
+
+  // -----------------------------------------
+  // FETCH VENDORS
+  // -----------------------------------------
+
+  const fetchVendors = async () => {
+    try {
+      setLoadingVendors(true);
+
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/procurements/vendors",
+        {
+          method: "GET",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to load vendors"
+        );
+      }
+
+      setVendors(
+        data.vendors || []
+      );
+
+    } catch (error) {
+      console.error(
+        "Error loading vendors:",
+        error
+      );
+
+      setCreateError(
+        error.message
+      );
+
+    } finally {
+      setLoadingVendors(false);
+    }
+  };
+
+
+  // -----------------------------------------
+  // FETCH PROCUREMENTS
+  // -----------------------------------------
+
+  const fetchProcurements = async () => {
+    try {
+      setLoadingProcurements(true);
+      setProcurementFetchError("");
+
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/procurements",
+        {
+          method: "GET",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to load procurements"
+        );
+      }
+
+      setProcurements(
+        data.procurements || []
+      );
+
+    } catch (error) {
+      console.error(
+        "Error loading procurements:",
+        error
+      );
+
+      setProcurementFetchError(
+        error.message
+      );
+
+    } finally {
+      setLoadingProcurements(false);
+    }
+  };
+
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
   // -----------------------------------------
   // CREATE CAMPAIGN
   // -----------------------------------------
@@ -211,23 +435,49 @@ const fetchProcurements = async () => {
     setCreateError("");
     setCreateSuccess("");
 
+<<<<<<< HEAD
     // Frontend validation
     if (!title.trim()) {
       setCreateError("Campaign title is required.");
+=======
+    if (!title.trim()) {
+      setCreateError(
+        "Campaign title is required."
+      );
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       return;
     }
 
     if (!description.trim()) {
+<<<<<<< HEAD
       setCreateError("Campaign description is required.");
+=======
+      setCreateError(
+        "Campaign description is required."
+      );
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       return;
     }
 
     if (!category.trim()) {
+<<<<<<< HEAD
       setCreateError("Campaign category is required.");
       return;
     }
 
     if (!target || Number(target) <= 0) {
+=======
+      setCreateError(
+        "Campaign category is required."
+      );
+      return;
+    }
+
+    if (
+      !target ||
+      Number(target) <= 0
+    ) {
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       setCreateError(
         "Target amount must be greater than 0."
       );
@@ -237,10 +487,20 @@ const fetchProcurements = async () => {
     try {
       setCreatingCampaign(true);
 
+<<<<<<< HEAD
       const token = localStorage.getItem("clairToken");
 
       if (!token) {
         throw new Error("You are not logged in.");
+=======
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       }
 
       const response = await fetch(
@@ -253,6 +513,7 @@ const fetchProcurements = async () => {
             Authorization: `Bearer ${token}`,
           },
 
+<<<<<<< HEAD
           // IMPORTANT:
           // These names exactly match campaignRoutes.js
           body: JSON.stringify({
@@ -260,10 +521,25 @@ const fetchProcurements = async () => {
             description: description.trim(),
             category: category.trim(),
             target: Number(target),
+=======
+          body: JSON.stringify({
+            title:
+              title.trim(),
+
+            description:
+              description.trim(),
+
+            category:
+              category.trim(),
+
+            target:
+              Number(target),
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
           }),
         }
       );
 
+<<<<<<< HEAD
       const data = await response.json();
 
       if (!response.ok) {
@@ -279,31 +555,69 @@ const fetchProcurements = async () => {
       ]);
 
       // Clear form
+=======
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to create campaign"
+        );
+      }
+
+      setCampaigns(
+        (previousCampaigns) => [
+          data.campaign,
+          ...previousCampaigns,
+        ]
+      );
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       setTitle("");
       setDescription("");
       setCategory("");
       setTarget("");
+<<<<<<< HEAD
       setSelectedVendor("");
+=======
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       setCreateSuccess(
         "Campaign created successfully!"
       );
 
+<<<<<<< HEAD
       // Close form after successful creation
+=======
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       setTimeout(() => {
         setShowCreateCampaign(false);
         setCreateSuccess("");
       }, 1200);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
     } catch (error) {
       console.error(
         "Error creating campaign:",
         error
       );
 
+<<<<<<< HEAD
       setCreateError(error.message);
+=======
+      setCreateError(
+        error.message
+      );
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
     } finally {
       setCreatingCampaign(false);
     }
   };
+<<<<<<< HEAD
   const handleCreateProcurement = async (e) => {
   e.preventDefault();
 
@@ -417,6 +731,158 @@ const fetchProcurements = async () => {
     setCreatingProcurement(false);
   }
 };
+=======
+
+
+  // -----------------------------------------
+  // CREATE PROCUREMENT
+  // -----------------------------------------
+
+  const handleCreateProcurement = async (e) => {
+    e.preventDefault();
+
+    setProcurementError("");
+    setProcurementSuccess("");
+
+    // Campaign
+    if (!procurementCampaign) {
+      setProcurementError(
+        "Please select a campaign."
+      );
+      return;
+    }
+
+    // Title
+    if (!procurementTitle.trim()) {
+      setProcurementError(
+        "Procurement title is required."
+      );
+      return;
+    }
+
+    // Description
+    if (!procurementDescription.trim()) {
+      setProcurementError(
+        "Procurement description is required."
+      );
+      return;
+    }
+
+    // Amount
+    if (
+      !procurementAmount ||
+      Number(procurementAmount) <= 0
+    ) {
+      setProcurementError(
+        "Procurement amount must be greater than 0."
+      );
+      return;
+    }
+
+    // Vendor
+    if (!selectedVendor) {
+      setProcurementError(
+        "Please select a vendor."
+      );
+      return;
+    }
+
+    try {
+      setCreatingProcurement(true);
+
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/procurements",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            campaignId:
+              procurementCampaign.id,
+
+            title:
+              procurementTitle.trim(),
+
+            description:
+              procurementDescription.trim(),
+
+            amount:
+              Number(procurementAmount),
+
+            vendorId:
+              Number(selectedVendor),
+          }),
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to create procurement"
+        );
+      }
+
+      setProcurementSuccess(
+        "Procurement created successfully!"
+      );
+
+      setProcurementTitle("");
+      setProcurementDescription("");
+      setProcurementAmount("");
+      setSelectedVendor("");
+
+      // Immediately add the new procurement
+      // to the displayed list.
+      if (data.procurement) {
+        setProcurements(
+          (previous) => [
+            data.procurement,
+            ...previous,
+          ]
+        );
+      } else {
+        await fetchProcurements();
+      }
+
+      setTimeout(() => {
+        setProcurementCampaign(null);
+        setShowCreateProcurement(false);
+        setProcurementSuccess("");
+      }, 1200);
+
+    } catch (error) {
+      console.error(
+        "Create procurement error:",
+        error
+      );
+
+      setProcurementError(
+        error.message
+      );
+
+    } finally {
+      setCreatingProcurement(false);
+    }
+  };
+
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
   // -----------------------------------------
   // UI
   // -----------------------------------------
@@ -428,6 +894,10 @@ const fetchProcurements = async () => {
         {/* HEADER */}
 
         <div style={styles.header}>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
           <div>
             <h1 style={styles.heading}>
               NGO Dashboard
@@ -454,12 +924,23 @@ const fetchProcurements = async () => {
               ? "Close"
               : "+ Create Campaign"}
           </button>
+<<<<<<< HEAD
         </div>
 
+=======
+
+        </div>
+
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
         {/* CREATE CAMPAIGN FORM */}
 
         {showCreateCampaign && (
           <div style={styles.formCard}>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
             <h2>
               Create New Campaign
             </h2>
@@ -470,12 +951,22 @@ const fetchProcurements = async () => {
             </p>
 
             <form
+<<<<<<< HEAD
               onSubmit={handleCreateCampaign}
             >
 
               {/* TITLE */}
 
               <div style={styles.formGroup}>
+=======
+              onSubmit={
+                handleCreateCampaign
+              }
+            >
+
+              <div style={styles.formGroup}>
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <label style={styles.label}>
                   Campaign Title
                 </label>
@@ -485,6 +976,7 @@ const fetchProcurements = async () => {
                   placeholder="e.g. Education for 100 Children"
                   value={title}
                   onChange={(e) =>
+<<<<<<< HEAD
                     setTitle(e.target.value)
                   }
                   style={styles.input}
@@ -494,6 +986,20 @@ const fetchProcurements = async () => {
               {/* DESCRIPTION */}
 
               <div style={styles.formGroup}>
+=======
+                    setTitle(
+                      e.target.value
+                    )
+                  }
+                  style={styles.input}
+                />
+
+              </div>
+
+
+              <div style={styles.formGroup}>
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <label style={styles.label}>
                   Description
                 </label>
@@ -509,11 +1015,20 @@ const fetchProcurements = async () => {
                   style={styles.textarea}
                   rows={5}
                 />
+<<<<<<< HEAD
               </div>
 
               {/* CATEGORY */}
 
               <div style={styles.formGroup}>
+=======
+
+              </div>
+
+
+              <div style={styles.formGroup}>
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <label style={styles.label}>
                   Category
                 </label>
@@ -521,10 +1036,20 @@ const fetchProcurements = async () => {
                 <select
                   value={category}
                   onChange={(e) =>
+<<<<<<< HEAD
                     setCategory(e.target.value)
                   }
                   style={styles.input}
                 >
+=======
+                    setCategory(
+                      e.target.value
+                    )
+                  }
+                  style={styles.input}
+                >
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                   <option value="">
                     Select a category
                   </option>
@@ -556,12 +1081,23 @@ const fetchProcurements = async () => {
                   <option value="Other">
                     Other
                   </option>
+<<<<<<< HEAD
                 </select>
               </div>
 
               {/* TARGET */}
 
               <div style={styles.formGroup}>
+=======
+
+                </select>
+
+              </div>
+
+
+              <div style={styles.formGroup}>
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <label style={styles.label}>
                   Target Amount (₹)
                 </label>
@@ -572,6 +1108,7 @@ const fetchProcurements = async () => {
                   placeholder="50000"
                   value={target}
                   onChange={(e) =>
+<<<<<<< HEAD
                     setTarget(e.target.value)
                   }
                   style={styles.input}
@@ -579,6 +1116,17 @@ const fetchProcurements = async () => {
               </div>
 
               {/* ERROR */}
+=======
+                    setTarget(
+                      e.target.value
+                    )
+                  }
+                  style={styles.input}
+                />
+
+              </div>
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
               {createError && (
                 <div style={styles.errorBox}>
@@ -586,7 +1134,10 @@ const fetchProcurements = async () => {
                 </div>
               )}
 
+<<<<<<< HEAD
               {/* SUCCESS */}
+=======
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
               {createSuccess && (
                 <div style={styles.successBox}>
@@ -594,17 +1145,27 @@ const fetchProcurements = async () => {
                 </div>
               )}
 
+<<<<<<< HEAD
               {/* SUBMIT */}
+=======
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
               <button
                 type="submit"
                 style={styles.submitButton}
+<<<<<<< HEAD
                 disabled={creatingCampaign}
+=======
+                disabled={
+                  creatingCampaign
+                }
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
               >
                 {creatingCampaign
                   ? "Creating Campaign..."
                   : "Create Campaign"}
               </button>
+<<<<<<< HEAD
             </form>
           </div>
         )}
@@ -617,13 +1178,42 @@ const fetchProcurements = async () => {
 
             <button
               onClick={fetchCampaigns}
+=======
+
+            </form>
+
+          </div>
+        )}
+
+
+        {/* CAMPAIGNS */}
+
+        <div style={styles.campaignSection}>
+
+          <div style={styles.sectionHeader}>
+
+            <h2>
+              Your Campaigns
+            </h2>
+
+            <button
+              onClick={
+                fetchCampaigns
+              }
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
               style={styles.refreshButton}
             >
               Refresh
             </button>
+<<<<<<< HEAD
           </div>
 
           {/* LOADING */}
+=======
+
+          </div>
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
           {loadingCampaigns && (
             <div style={styles.messageBox}>
@@ -631,6 +1221,7 @@ const fetchProcurements = async () => {
             </div>
           )}
 
+<<<<<<< HEAD
           {/* ERROR */}
 
           {campaignError && (
@@ -639,19 +1230,46 @@ const fetchProcurements = async () => {
 
               <button
                 onClick={fetchCampaigns}
+=======
+
+          {campaignError && (
+            <div style={styles.errorBox}>
+
+              <p>
+                {campaignError}
+              </p>
+
+              <button
+                onClick={
+                  fetchCampaigns
+                }
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 style={styles.retryButton}
               >
                 Try Again
               </button>
+<<<<<<< HEAD
             </div>
           )}
 
           {/* EMPTY */}
+=======
+
+            </div>
+          )}
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
           {!loadingCampaigns &&
             !campaignError &&
             campaigns.length === 0 && (
+<<<<<<< HEAD
               <div style={styles.emptyBox}>
+=======
+
+              <div style={styles.emptyBox}>
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <h3>
                   No campaigns yet
                 </h3>
@@ -663,20 +1281,34 @@ const fetchProcurements = async () => {
 
                 <button
                   onClick={() =>
+<<<<<<< HEAD
                     setShowCreateCampaign(true)
+=======
+                    setShowCreateCampaign(
+                      true
+                    )
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                   }
                   style={styles.createButton}
                 >
                   + Create Campaign
                 </button>
+<<<<<<< HEAD
               </div>
             )}
 
           {/* CAMPAIGN CARDS */}
+=======
+
+              </div>
+            )}
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
           {!loadingCampaigns &&
             !campaignError &&
             campaigns.length > 0 && (
+<<<<<<< HEAD
               <div style={styles.campaignGrid}>
 
                 {campaigns.map((campaign) => {
@@ -1168,6 +1800,816 @@ const fetchProcurements = async () => {
     )}
 </div>
         </div>
+=======
+
+              <div style={styles.campaignGrid}>
+
+                {campaigns.map(
+                  (campaign) => {
+
+                    const targetAmount =
+                      Number(
+                        campaign.target
+                      ) || 0;
+
+                    const raisedAmount =
+                      Number(
+                        campaign.raisedAmount
+                      ) || 0;
+
+                    const percentage =
+                      targetAmount > 0
+                        ? Math.min(
+                            100,
+                            Math.round(
+                              (raisedAmount /
+                                targetAmount) *
+                                100
+                            )
+                          )
+                        : 0;
+
+                    return (
+                      <div
+                        key={
+                          campaign.id
+                        }
+                        style={
+                          styles.campaignCard
+                        }
+                      >
+
+                        <div
+                          style={
+                            styles.campaignHeader
+                          }
+                        >
+
+                          <h3>
+                            {campaign.title}
+                          </h3>
+
+                          <span
+                            style={
+                              styles.activeBadge
+                            }
+                          >
+                            Active
+                          </span>
+
+                        </div>
+
+
+                        <p
+                          style={
+                            styles.categoryText
+                          }
+                        >
+                          {campaign.category}
+                        </p>
+
+
+                        <p
+                          style={
+                            styles.description
+                          }
+                        >
+                          {campaign.description}
+                        </p>
+
+
+                        <div
+                          style={
+                            styles.amountRow
+                          }
+                        >
+
+                          <span>
+                            Raised
+                          </span>
+
+                          <strong>
+                            ₹
+                            {raisedAmount.toLocaleString(
+                              "en-IN"
+                            )}
+                          </strong>
+
+                        </div>
+
+
+                        <div
+                          style={
+                            styles.amountRow
+                          }
+                        >
+
+                          <span>
+                            Target
+                          </span>
+
+                          <strong>
+                            ₹
+                            {targetAmount.toLocaleString(
+                              "en-IN"
+                            )}
+                          </strong>
+
+                        </div>
+
+
+                        <div
+                          style={
+                            styles.progressBackground
+                          }
+                        >
+
+                          <div
+                            style={{
+                              ...styles.progressBar,
+                              width: `${percentage}%`,
+                            }}
+                          />
+
+                        </div>
+
+
+                        <p
+                          style={
+                            styles.progressText
+                          }
+                        >
+                          {percentage}% funded
+                        </p>
+
+
+                        {campaign.ngo && (
+                          <p
+                            style={
+                              styles.ngoText
+                            }
+                          >
+                            Created by:{" "}
+                            {campaign.ngo.name}
+                          </p>
+                        )}
+
+
+                        <p
+                          style={
+                            styles.pledgeText
+                          }
+                        >
+                          Pledges:{" "}
+                          {campaign._count
+                            ?.pledges || 0}
+                        </p>
+
+
+                        <button
+                          onClick={() => {
+                            setProcurementCampaign(
+                              campaign
+                            );
+
+                            setShowCreateProcurement(
+                              true
+                            );
+
+                            setProcurementError(
+                              ""
+                            );
+
+                            setProcurementSuccess(
+                              ""
+                            );
+
+                            setSelectedVendor(
+                              ""
+                            );
+                          }}
+                          style={{
+                            ...styles.createButton,
+                            marginTop: "15px",
+                            width: "100%",
+                          }}
+                        >
+                          + Create Procurement
+                        </button>
+
+                      </div>
+                    );
+                  }
+                )}
+
+              </div>
+            )}
+
+
+          {/* CREATE PROCUREMENT FORM */}
+
+          {showCreateProcurement &&
+            procurementCampaign && (
+
+              <div style={styles.formCard}>
+
+                <h2>
+                  Create Procurement
+                </h2>
+
+                <p
+                  style={
+                    styles.formSubtitle
+                  }
+                >
+                  Campaign:{" "}
+                  <strong>
+                    {
+                      procurementCampaign.title
+                    }
+                  </strong>
+                </p>
+
+
+                <form
+                  onSubmit={
+                    handleCreateProcurement
+                  }
+                >
+
+                  <div
+                    style={
+                      styles.formGroup
+                    }
+                  >
+
+                    <label
+                      style={
+                        styles.label
+                      }
+                    >
+                      Procurement Title
+                    </label>
+
+                    <input
+                      type="text"
+                      placeholder="e.g. 100 School Kits"
+                      value={
+                        procurementTitle
+                      }
+                      onChange={(e) =>
+                        setProcurementTitle(
+                          e.target.value
+                        )
+                      }
+                      style={
+                        styles.input
+                      }
+                    />
+
+                  </div>
+
+
+                  <div
+                    style={
+                      styles.formGroup
+                    }
+                  >
+
+                    <label
+                      style={
+                        styles.label
+                      }
+                    >
+                      Description
+                    </label>
+
+                    <textarea
+                      placeholder="Describe what needs to be purchased..."
+                      value={
+                        procurementDescription
+                      }
+                      onChange={(e) =>
+                        setProcurementDescription(
+                          e.target.value
+                        )
+                      }
+                      style={
+                        styles.textarea
+                      }
+                      rows={4}
+                    />
+
+                  </div>
+
+
+                  <div
+                    style={
+                      styles.formGroup
+                    }
+                  >
+
+                    <label
+                      style={
+                        styles.label
+                      }
+                    >
+                      Amount (₹)
+                    </label>
+
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="20000"
+                      value={
+                        procurementAmount
+                      }
+                      onChange={(e) =>
+                        setProcurementAmount(
+                          e.target.value
+                        )
+                      }
+                      style={
+                        styles.input
+                      }
+                    />
+
+                  </div>
+
+
+                  {/* VENDOR */}
+
+                  <div
+                    style={
+                      styles.formGroup
+                    }
+                  >
+
+                    <label
+                      style={
+                        styles.label
+                      }
+                    >
+                      Select Vendor
+                    </label>
+
+                    <select
+                      value={
+                        selectedVendor
+                      }
+                      onChange={(e) =>
+                        setSelectedVendor(
+                          e.target.value
+                        )
+                      }
+                      style={
+                        styles.input
+                      }
+                      disabled={
+                        loadingVendors
+                      }
+                    >
+
+                      <option value="">
+                        {loadingVendors
+                          ? "Loading vendors..."
+                          : vendors.length === 0
+                          ? "No vendors available"
+                          : "Select a vendor"}
+                      </option>
+
+                      {vendors.map(
+                        (vendor) => (
+
+                          <option
+                            key={
+                              vendor.id
+                            }
+                            value={
+                              vendor.id
+                            }
+                          >
+                            {vendor.name} —{" "}
+                            {vendor.email}
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
+
+                  </div>
+
+
+                  {procurementError && (
+                    <div
+                      style={
+                        styles.errorBox
+                      }
+                    >
+                      {
+                        procurementError
+                      }
+                    </div>
+                  )}
+
+
+                  {procurementSuccess && (
+                    <div
+                      style={
+                        styles.successBox
+                      }
+                    >
+                      {
+                        procurementSuccess
+                      }
+                    </div>
+                  )}
+
+
+                  <button
+                    type="submit"
+                    style={
+                      styles.submitButton
+                    }
+                    disabled={
+                      creatingProcurement ||
+                      loadingVendors ||
+                      vendors.length === 0
+                    }
+                  >
+                    {creatingProcurement
+                      ? "Creating Procurement..."
+                      : "Create Procurement"}
+                  </button>
+
+                </form>
+
+              </div>
+            )}
+
+
+          {/* PROCUREMENT SECTION */}
+
+          <div
+            style={
+              styles.campaignSection
+            }
+          >
+
+            <div
+              style={
+                styles.sectionHeader
+              }
+            >
+
+              <h2>
+                Your Procurements
+              </h2>
+
+              <button
+                onClick={
+                  fetchProcurements
+                }
+                style={
+                  styles.refreshButton
+                }
+              >
+                Refresh
+              </button>
+
+            </div>
+
+
+            {loadingProcurements && (
+              <div
+                style={
+                  styles.messageBox
+                }
+              >
+                Loading procurements...
+              </div>
+            )}
+
+
+            {procurementFetchError && (
+              <div
+                style={
+                  styles.errorBox
+                }
+              >
+                {
+                  procurementFetchError
+                }
+              </div>
+            )}
+
+
+            {!loadingProcurements &&
+              !procurementFetchError &&
+              procurements.length === 0 && (
+
+                <div
+                  style={
+                    styles.emptyBox
+                  }
+                >
+
+                  <h3>
+                    No procurements yet
+                  </h3>
+
+                  <p>
+                    Procurements you create
+                    for your campaigns will
+                    appear here.
+                  </p>
+
+                </div>
+              )}
+
+
+            {!loadingProcurements &&
+              !procurementFetchError &&
+              procurements.length > 0 && (
+
+                <div
+                  style={
+                    styles.campaignGrid
+                  }
+                >
+
+                  {procurements.map(
+                    (procurement) => {
+
+                      const status =
+                        procurement.status;
+
+                      let statusBackground =
+                        "#fef3c7";
+
+                      let statusColor =
+                        "#92400e";
+
+
+                      if (
+                        status ===
+                        "ORDERED"
+                      ) {
+                        statusBackground =
+                          "#dbeafe";
+
+                        statusColor =
+                          "#1d4ed8";
+                      }
+
+
+                      if (
+                        status ===
+                        "DELIVERED"
+                      ) {
+                        statusBackground =
+                          "#dcfce7";
+
+                        statusColor =
+                          "#166534";
+                      }
+
+
+                      if (
+                        status ===
+                        "VERIFICATION_PENDING"
+                      ) {
+                        statusBackground =
+                          "#f3e8ff";
+
+                        statusColor =
+                          "#7e22ce";
+                      }
+
+
+                      if (
+                        status ===
+                        "VERIFIED"
+                      ) {
+                        statusBackground =
+                          "#dcfce7";
+
+                        statusColor =
+                          "#166534";
+                      }
+
+
+                      if (
+                        status ===
+                        "PAYMENT_RELEASED"
+                      ) {
+                        statusBackground =
+                          "#d1fae5";
+
+                        statusColor =
+                          "#047857";
+                      }
+
+
+                      return (
+                        <div
+                          key={
+                            procurement.id
+                          }
+                          style={
+                            styles.campaignCard
+                          }
+                        >
+
+                          <div
+                            style={
+                              styles.campaignHeader
+                            }
+                          >
+
+                            <div>
+
+                              <h3>
+                                {
+                                  procurement.title
+                                }
+                              </h3>
+
+                              <p
+                                style={{
+                                  marginTop:
+                                    "5px",
+
+                                  fontSize:
+                                    "13px",
+
+                                  color:
+                                    "#666",
+                                }}
+                              >
+                                Procurement #
+                                {
+                                  procurement.id
+                                }
+                              </p>
+
+                            </div>
+
+
+                            <span
+                              style={{
+                                ...styles.activeBadge,
+
+                                backgroundColor:
+                                  statusBackground,
+
+                                color:
+                                  statusColor,
+                              }}
+                            >
+                              {status.replaceAll(
+                                "_",
+                                " "
+                              )}
+                            </span>
+
+                          </div>
+
+
+                          <p
+                            style={
+                              styles.categoryText
+                            }
+                          >
+                            Campaign:{" "}
+                            {
+                              procurement
+                                .campaign
+                                ?.title ||
+                              "Unknown Campaign"
+                            }
+                          </p>
+
+
+                          <p
+                            style={
+                              styles.description
+                            }
+                          >
+                            {
+                              procurement.description
+                            }
+                          </p>
+
+
+                          <div
+                            style={
+                              styles.amountRow
+                            }
+                          >
+
+                            <span>
+                              Amount
+                            </span>
+
+                            <strong>
+                              ₹
+                              {Number(
+                                procurement.amount
+                              ).toLocaleString(
+                                "en-IN"
+                              )}
+                            </strong>
+
+                          </div>
+
+
+                          {/* VENDOR */}
+
+                          <div
+                            style={{
+                              marginTop:
+                                "15px",
+
+                              paddingTop:
+                                "15px",
+
+                              borderTop:
+                                "1px solid #e5e7eb",
+                            }}
+                          >
+
+                            <p
+                              style={
+                                styles.pledgeText
+                              }
+                            >
+
+                              <strong>
+                                Vendor:
+                              </strong>{" "}
+
+                              {procurement.vendor
+                                ? procurement
+                                    .vendor
+                                    .name
+                                : "Not assigned"}
+
+                            </p>
+
+
+                            {procurement.vendor && (
+                              <p
+                                style={{
+                                  ...styles.pledgeText,
+                                  marginTop:
+                                    "5px",
+                                }}
+                              >
+                                {
+                                  procurement
+                                    .vendor
+                                    .email
+                                }
+                              </p>
+                            )}
+
+                          </div>
+
+
+                          <p
+                            style={{
+                              ...styles.pledgeText,
+                              marginTop:
+                                "12px",
+                            }}
+                          >
+
+                            <strong>
+                              Status:
+                            </strong>{" "}
+
+                            {status.replaceAll(
+                              "_",
+                              " "
+                            )}
+
+                          </p>
+
+                        </div>
+                      );
+                    }
+                  )}
+
+                </div>
+              )}
+
+          </div>
+
+        </div>
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       </div>
     </div>
   );

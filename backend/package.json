@@ -11,6 +11,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+<<<<<<< HEAD
+=======
+    "@google/genai": "^2.18.0",
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "bcryptjs": "^3.0.3",
@@ -18,6 +22,11 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+<<<<<<< HEAD
+=======
+    "multer": "^2.2.0",
+    "openai": "^7.5.0",
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
     "pg": "^8.23.0",
     "prisma": "^7.9.1"
   },

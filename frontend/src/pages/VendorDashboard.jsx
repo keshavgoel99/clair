@@ -10,10 +10,22 @@ function VendorDashboard() {
   const [deliveringId, setDeliveringId] = useState(null);
   const [success, setSuccess] = useState("");
 
+<<<<<<< HEAD
 const [documentType, setDocumentType] = useState("INVOICE");
 const [documentUrl, setDocumentUrl] = useState("");
 const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
   
+=======
+  const [documentType, setDocumentType] =
+    useState("INVOICE");
+
+  const [documentFile, setDocumentFile] =
+    useState(null);
+
+  const [uploadingDocumentId, setUploadingDocumentId] =
+    useState(null);
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
   // =====================================================
   // FETCH PROCUREMENTS
@@ -125,10 +137,15 @@ const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
         "Procurement accepted successfully!"
       );
 
+<<<<<<< HEAD
       // Remove accepted procurement
       // from available procurements.
 
           await fetchProcurements();
+=======
+      await fetchProcurements();
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
     } catch (error) {
       console.error(
         "Accept procurement error:",
@@ -141,6 +158,7 @@ const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
       setAcceptingId(null);
     }
   };
+<<<<<<< HEAD
 const handleDeliver = async (
   procurementId
 ) => {
@@ -268,6 +286,240 @@ const handleUploadDocument = async (procurementId) => {
     setUploadingDocumentId(null);
   }
 };
+=======
+
+
+  // =====================================================
+  // MARK PROCUREMENT AS DELIVERED
+  // =====================================================
+
+  const handleDeliver = async (
+    procurementId
+  ) => {
+    try {
+      setDeliveringId(procurementId);
+      setError("");
+      setSuccess("");
+
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/vendors/procurements/${procurementId}/deliver`,
+        {
+          method: "PATCH",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to mark procurement as delivered"
+        );
+      }
+
+      setSuccess(
+        "Procurement marked as delivered!"
+      );
+
+      await fetchProcurements();
+
+    } catch (error) {
+      console.error(
+        "Delivery error:",
+        error
+      );
+
+      setError(error.message);
+
+    } finally {
+      setDeliveringId(null);
+    }
+  };
+
+
+  // =====================================================
+  // UPLOAD DOCUMENT
+  // =====================================================
+  //
+  // Sends an actual PDF/JPG/PNG file to the backend.
+  //
+  // Backend expects:
+  // - procurementId
+  // - type
+  // - document
+  //
+  // =====================================================
+
+  const handleUploadDocument = async (
+    procurementId
+  ) => {
+    try {
+      setUploadingDocumentId(procurementId);
+      setError("");
+      setSuccess("");
+
+      if (!documentFile) {
+        throw new Error(
+          "Please select a PDF, JPG or PNG document."
+        );
+      }
+
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+      }
+
+
+      // -----------------------------------------------
+      // Validate file type
+      // -----------------------------------------------
+
+      const allowedTypes = [
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+      ];
+
+      if (
+        !allowedTypes.includes(
+          documentFile.type
+        )
+      ) {
+        throw new Error(
+          "Only PDF, JPG, JPEG and PNG files are allowed."
+        );
+      }
+
+
+      // -----------------------------------------------
+      // Validate file size
+      // -----------------------------------------------
+
+      const maxSize =
+        10 * 1024 * 1024;
+
+      if (
+        documentFile.size >
+        maxSize
+      ) {
+        throw new Error(
+          "File size must be 10 MB or less."
+        );
+      }
+
+
+      // -----------------------------------------------
+      // Create multipart form data
+      // -----------------------------------------------
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "procurementId",
+        procurementId
+      );
+
+      formData.append(
+        "type",
+        documentType
+      );
+
+      formData.append(
+        "document",
+        documentFile
+      );
+
+
+      // -----------------------------------------------
+      // Send file to backend
+      // -----------------------------------------------
+
+      const response =
+        await fetch(
+          "http://localhost:5000/api/documents",
+          {
+            method: "POST",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: formData,
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to upload document"
+        );
+      }
+
+
+      // -----------------------------------------------
+      // Success
+      // -----------------------------------------------
+
+      setSuccess(
+        "Document uploaded successfully!"
+      );
+
+      setDocumentFile(null);
+
+      // Reset file input visually
+      const fileInput =
+        document.getElementById(
+          "vendor-document-file"
+        );
+
+      if (fileInput) {
+        fileInput.value = "";
+      }
+
+      await fetchProcurements();
+
+    } catch (error) {
+      console.error(
+        "Document upload error:",
+        error
+      );
+
+      setError(
+        error.message
+      );
+
+    } finally {
+      setUploadingDocumentId(null);
+    }
+  };
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
   // =====================================================
   // STATISTICS
@@ -276,6 +528,10 @@ const handleUploadDocument = async (procurementId) => {
   const assignedOrders =
     procurements.length;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
   const pendingDelivery =
     procurements.filter(
       (procurement) =>
@@ -283,6 +539,10 @@ const handleUploadDocument = async (procurementId) => {
         "ORDERED"
     ).length;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
   const verificationPending =
     procurements.filter(
       (procurement) =>
@@ -290,6 +550,10 @@ const handleUploadDocument = async (procurementId) => {
         "VERIFICATION_PENDING"
     ).length;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
   const totalAmount =
     procurements.reduce(
       (total, procurement) =>
@@ -308,7 +572,13 @@ const handleUploadDocument = async (procurementId) => {
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
 
+<<<<<<< HEAD
       {/* HEADER */}
+=======
+      {/* =================================================
+          HEADER
+      ================================================= */}
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
 
@@ -340,7 +610,13 @@ const handleUploadDocument = async (procurementId) => {
       </div>
 
 
+<<<<<<< HEAD
       {/* SUCCESS */}
+=======
+      {/* =================================================
+          SUCCESS
+      ================================================= */}
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
       {success && (
         <div className="mt-6 rounded-lg bg-green-100 p-4 text-sm text-green-700">
@@ -349,7 +625,13 @@ const handleUploadDocument = async (procurementId) => {
       )}
 
 
+<<<<<<< HEAD
       {/* ERROR */}
+=======
+      {/* =================================================
+          ERROR
+      ================================================= */}
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
       {error && (
         <div className="mt-6 rounded-lg bg-red-100 p-4 text-sm text-red-700">
@@ -358,7 +640,13 @@ const handleUploadDocument = async (procurementId) => {
       )}
 
 
+<<<<<<< HEAD
       {/* STATISTICS */}
+=======
+      {/* =================================================
+          STATISTICS
+      ================================================= */}
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
       <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
@@ -419,7 +707,13 @@ const handleUploadDocument = async (procurementId) => {
       </section>
 
 
+<<<<<<< HEAD
       {/* PROCUREMENT LIST */}
+=======
+      {/* =================================================
+          PROCUREMENT LIST
+      ================================================= */}
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
       <section className="mt-10">
 
@@ -561,6 +855,7 @@ const handleUploadDocument = async (procurementId) => {
                         </p>
 
 
+<<<<<<< HEAD
                         {/* ACCEPT BUTTON */}
 
 {/* PROCUREMENT ACTIONS */}
@@ -672,6 +967,157 @@ const handleUploadDocument = async (procurementId) => {
 
   </div>
 )}
+=======
+                        {/* =================================
+                            PROCUREMENT ACTIONS
+                        ================================= */}
+
+                        {procurement.status ===
+                          "CREATED" && (
+
+                          <button
+                            onClick={() =>
+                              handleAccept(
+                                procurement.id
+                              )
+                            }
+                            disabled={
+                              acceptingId ===
+                              procurement.id
+                            }
+                            className="mt-4 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {acceptingId ===
+                            procurement.id
+                              ? "Accepting..."
+                              : "Accept Procurement"}
+                          </button>
+                        )}
+
+
+                        {procurement.status ===
+                          "ORDERED" && (
+
+                          <button
+                            onClick={() =>
+                              handleDeliver(
+                                procurement.id
+                              )
+                            }
+                            disabled={
+                              deliveringId ===
+                              procurement.id
+                            }
+                            className="mt-4 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {deliveringId ===
+                            procurement.id
+                              ? "Marking Delivered..."
+                              : "Mark as Delivered"}
+                          </button>
+                        )}
+
+
+                        {/* =================================
+                            DOCUMENT SUBMISSION
+                        ================================= */}
+
+                        {procurement.status ===
+                          "DELIVERED" && (
+
+                          <div className="mt-5 border-t border-slate-200 pt-5">
+
+                            <p className="font-semibold text-slate-800">
+                              Submit Documents
+                            </p>
+
+                            <p className="mt-1 text-xs text-slate-500">
+                              Submit an invoice, receipt
+                              or other supporting
+                              document.
+                            </p>
+
+
+                            {/* DOCUMENT TYPE */}
+
+                            <select
+                              value={
+                                documentType
+                              }
+                              onChange={(e) =>
+                                setDocumentType(
+                                  e.target.value
+                                )
+                              }
+                              className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            >
+
+                              <option value="INVOICE">
+                                Invoice
+                              </option>
+
+                              <option value="DELIVERY_RECEIPT">
+                                Delivery Receipt
+                              </option>
+
+                              <option value="IMAGE">
+                                Delivery Image
+                              </option>
+
+                            </select>
+
+
+                            {/* FILE PICKER */}
+
+                            <input
+                              id="vendor-document-file"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                              onChange={(e) =>
+                                setDocumentFile(
+                                  e.target.files?.[0] ||
+                                  null
+                                )
+                              }
+                              className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            />
+
+
+                            {/* SELECTED FILE */}
+
+                            {documentFile && (
+                              <p className="mt-2 text-xs text-slate-500">
+                                Selected:{" "}
+                                {documentFile.name}
+                              </p>
+                            )}
+
+
+                            {/* SUBMIT */}
+
+                            <button
+                              onClick={() =>
+                                handleUploadDocument(
+                                  procurement.id
+                                )
+                              }
+                              disabled={
+                                uploadingDocumentId ===
+                                procurement.id
+                              }
+                              className="mt-3 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+
+                              {uploadingDocumentId ===
+                              procurement.id
+                                ? "Uploading..."
+                                : "Upload Document"}
+
+                            </button>
+
+                          </div>
+                        )}
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
                       </div>
 
@@ -688,7 +1134,13 @@ const handleUploadDocument = async (procurementId) => {
       </section>
 
 
+<<<<<<< HEAD
       {/* DELIVERY INFORMATION */}
+=======
+      {/* =================================================
+          DELIVERY INFORMATION
+      ================================================= */}
+>>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
       <section className="mt-10 rounded-xl border border-blue-100 bg-blue-50 p-6">
 

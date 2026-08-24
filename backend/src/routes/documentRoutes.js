@@ -1,4 +1,7 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const prisma = require("../db/prisma");
 
@@ -11,26 +14,94 @@ const router = express.Router();
 
 
 // =====================================================
+// FILE UPLOAD CONFIGURATION
+// =====================================================
+
+const uploadDirectory = path.join(
+  __dirname,
+  "../../uploads"
+);
+
+if (!fs.existsSync(uploadDirectory)) {
+  fs.mkdirSync(uploadDirectory, {
+    recursive: true,
+  });
+}
+
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDirectory);
+  },
+
+  filename: (req, file, cb) => {
+    const extension =
+      path.extname(file.originalname);
+
+    const safeName =
+      `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 10)}${extension}`;
+
+    cb(null, safeName);
+  },
+});
+
+
+const allowedMimeTypes = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+];
+
+
+const upload = multer({
+  storage,
+
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+
+  fileFilter: (req, file, cb) => {
+    if (
+      allowedMimeTypes.includes(
+        file.mimetype
+      )
+    ) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          "Only PDF, JPG, JPEG and PNG files are allowed."
+        )
+      );
+    }
+  },
+});
+
+
+// =====================================================
 // UPLOAD DOCUMENT
 // =====================================================
 //
-// Vendor uploads a document for a procurement.
+// Vendor uploads a real PDF/image for a procurement.
 //
-// For now we store the file URL/path.
-// Actual file storage will be connected next.
+// The file is stored locally in /uploads.
+// The database stores its relative URL/path.
+//
 // =====================================================
 
 router.post(
   "/",
   authenticateToken,
   authorizeRoles("VENDOR"),
+  upload.single("document"),
 
   async (req, res) => {
     try {
       const {
         procurementId,
         type,
-        fileUrl,
       } = req.body;
 
 
@@ -40,12 +111,19 @@ router.post(
 
       if (
         procurementId === undefined ||
-        !type ||
-        !fileUrl
+        !type
       ) {
         return res.status(400).json({
           message:
-            "Procurement ID, document type and file URL are required",
+            "Procurement ID and document type are required.",
+        });
+      }
+
+
+      if (!req.file) {
+        return res.status(400).json({
+          message:
+            "A document file is required.",
         });
       }
 
@@ -57,7 +135,7 @@ router.post(
       if (!Number.isInteger(id)) {
         return res.status(400).json({
           message:
-            "Invalid procurement ID",
+            "Invalid procurement ID.",
         });
       }
 
@@ -71,7 +149,7 @@ router.post(
           where: {
             id,
 
-            // Only the assigned vendor
+            // Only assigned vendor
             // can upload documents.
             vendorId: req.user.id,
 
@@ -83,24 +161,41 @@ router.post(
 
 
       if (!procurement) {
+        // Delete uploaded file because
+        // the upload is not authorized.
+        try {
+          fs.unlinkSync(
+            req.file.path
+          );
+        } catch (deleteError) {
+          console.error(
+            "Unable to delete unauthorized upload:",
+            deleteError
+          );
+        }
+
         return res.status(404).json({
           message:
-            "Procurement not found or not available for document submission",
+            "Procurement not found or not available for document submission.",
         });
       }
 
 
       // -----------------------------------------------
-      // Create document
+      // Store document
       // -----------------------------------------------
+
+      const fileUrl =
+        `/uploads/${req.file.filename}`;
+
 
       const document =
         await prisma.document.create({
           data: {
-            type: type.trim(),
+            type:
+              type.trim(),
 
-            fileUrl:
-              fileUrl.trim(),
+            fileUrl,
 
             procurementId:
               procurement.id,
@@ -122,16 +217,37 @@ router.post(
             "VERIFICATION_PENDING",
         },
       });
-      await prisma.verification.create({
-  data: {
-    procurementId: procurement.id,
-    status: "PENDING",
-  },
-});
 
-      res.status(201).json({
+
+      // -----------------------------------------------
+      // Create verification record
+      // -----------------------------------------------
+
+      const existingVerification =
+        await prisma.verification.findUnique({
+          where: {
+            procurementId:
+              procurement.id,
+          },
+        });
+
+
+      if (!existingVerification) {
+        await prisma.verification.create({
+          data: {
+            procurementId:
+              procurement.id,
+
+            status:
+              "PENDING",
+          },
+        });
+      }
+
+
+      return res.status(201).json({
         message:
-          "Document uploaded successfully",
+          "Document uploaded successfully.",
 
         document,
       });
@@ -142,9 +258,29 @@ router.post(
         error
       );
 
-      res.status(500).json({
+
+      // Delete file if database
+      // operation failed.
+      if (req.file) {
+        try {
+          fs.unlinkSync(
+            req.file.path
+          );
+        } catch (deleteError) {
+          console.error(
+            "Unable to clean up uploaded file:",
+            deleteError
+          );
+        }
+      }
+
+
+      return res.status(500).json({
         message:
-          "Unable to upload document",
+          "Unable to upload document.",
+
+        error:
+          error.message,
       });
     }
   }
@@ -155,8 +291,9 @@ router.post(
 // GET PROCUREMENT DOCUMENTS
 // =====================================================
 //
-// Vendor can view documents belonging to their
-// procurements.
+// Vendor or NGO can view documents belonging
+// to their procurements.
+//
 // =====================================================
 
 router.get(
@@ -178,7 +315,7 @@ router.get(
       ) {
         return res.status(400).json({
           message:
-            "Invalid procurement ID",
+            "Invalid procurement ID.",
         });
       }
 
@@ -206,7 +343,7 @@ router.get(
       if (!procurement) {
         return res.status(404).json({
           message:
-            "Procurement not found",
+            "Procurement not found.",
         });
       }
 
@@ -218,12 +355,13 @@ router.get(
           },
 
           orderBy: {
-            createdAt: "desc",
+            createdAt:
+              "desc",
           },
         });
 
 
-      res.json({
+      return res.json({
         documents,
       });
 
@@ -233,11 +371,41 @@ router.get(
         error
       );
 
-      res.status(500).json({
+
+      return res.status(500).json({
         message:
-          "Unable to fetch documents",
+          "Unable to fetch documents.",
       });
     }
+  }
+);
+
+
+// =====================================================
+// MULTER ERROR HANDLER
+// =====================================================
+
+router.use(
+  (error, req, res, next) => {
+    if (
+      error instanceof multer.MulterError
+    ) {
+      return res.status(400).json({
+        message:
+          `Upload error: ${error.message}`,
+      });
+    }
+
+
+    if (error) {
+      return res.status(400).json({
+        message:
+          error.message,
+      });
+    }
+
+
+    next();
   }
 );
 

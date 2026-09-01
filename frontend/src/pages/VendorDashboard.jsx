@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BrowserProvider } from "ethers";
 
 function VendorDashboard() {
   const [procurements, setProcurements] = useState([]);
@@ -10,6 +11,7 @@ function VendorDashboard() {
   const [deliveringId, setDeliveringId] = useState(null);
   const [success, setSuccess] = useState("");
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 const [documentType, setDocumentType] = useState("INVOICE");
 const [documentUrl, setDocumentUrl] = useState("");
@@ -26,6 +28,20 @@ const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
     useState(null);
 
 >>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
+=======
+  const [documentType, setDocumentType] = useState("INVOICE");
+  const [documentUrl, setDocumentUrl] = useState("");
+  const [uploadingDocumentId, setUploadingDocumentId] =
+    useState(null);
+
+  // =====================================================
+  // WALLET STATE
+  // =====================================================
+
+  const [walletAddress, setWalletAddress] = useState("");
+  const [connectingWallet, setConnectingWallet] =
+    useState(false);
+>>>>>>> 8eb19b6 (Integrate blockchain funding flow)
 
   // =====================================================
   // FETCH PROCUREMENTS
@@ -33,8 +49,8 @@ const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
 
   useEffect(() => {
     fetchProcurements();
+    fetchWallet();
   }, []);
-
 
   const fetchProcurements = async () => {
     try {
@@ -89,6 +105,174 @@ const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
     }
   };
 
+  // =====================================================
+  // FETCH SAVED WALLET
+  // =====================================================
+
+  const fetchWallet = async () => {
+    try {
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/vendors/wallet",
+        {
+          method: "GET",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to load wallet"
+        );
+      }
+
+      setWalletAddress(
+        data.walletAddress || ""
+      );
+
+    } catch (error) {
+      console.error(
+        "Fetch wallet error:",
+        error
+      );
+    }
+  };
+
+  // =====================================================
+  // CONNECT VENDOR WALLET
+  // =====================================================
+
+  const handleConnectWallet = async () => {
+    try {
+      setConnectingWallet(true);
+      setError("");
+      setSuccess("");
+
+      if (!window.ethereum) {
+        throw new Error(
+          "MetaMask is not installed. Please install MetaMask."
+        );
+      }
+
+      // -------------------------------------------------
+      // Connect MetaMask
+      // -------------------------------------------------
+
+      const provider =
+        new BrowserProvider(
+          window.ethereum
+        );
+
+      await provider.send(
+        "eth_requestAccounts",
+        []
+      );
+
+      // -------------------------------------------------
+      // Verify Sepolia
+      // -------------------------------------------------
+
+      const network =
+        await provider.getNetwork();
+
+      if (
+        network.chainId !==
+        11155111n
+      ) {
+        throw new Error(
+          "Please switch MetaMask to the Sepolia network."
+        );
+      }
+
+      // -------------------------------------------------
+      // Get wallet
+      // -------------------------------------------------
+
+      const signer =
+        await provider.getSigner();
+
+      const address =
+        await signer.getAddress();
+
+      // -------------------------------------------------
+      // Save wallet in backend
+      // -------------------------------------------------
+
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+      }
+
+      const response =
+        await fetch(
+          "http://localhost:5000/api/vendors/wallet",
+          {
+            method: "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              walletAddress:
+                address,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to save wallet address"
+        );
+      }
+
+      setWalletAddress(
+        data.vendor?.walletAddress ||
+          address
+      );
+
+      setSuccess(
+        "MetaMask wallet connected successfully!"
+      );
+
+    } catch (error) {
+      console.error(
+        "Wallet connection error:",
+        error
+      );
+
+      setError(error.message);
+
+    } finally {
+      setConnectingWallet(false);
+    }
+  };
 
   // =====================================================
   // ACCEPT PROCUREMENT
@@ -138,6 +322,7 @@ const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
       );
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       // Remove accepted procurement
       // from available procurements.
 
@@ -146,6 +331,10 @@ const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
       await fetchProcurements();
 
 >>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
+=======
+      await fetchProcurements();
+
+>>>>>>> 8eb19b6 (Integrate blockchain funding flow)
     } catch (error) {
       console.error(
         "Accept procurement error:",
@@ -159,6 +348,7 @@ const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
     }
   };
 <<<<<<< HEAD
+<<<<<<< HEAD
 const handleDeliver = async (
   procurementId
 ) => {
@@ -166,105 +356,155 @@ const handleDeliver = async (
     setDeliveringId(procurementId);
     setError("");
     setSuccess("");
+=======
+>>>>>>> 8eb19b6 (Integrate blockchain funding flow)
 
-    const token =
-      localStorage.getItem("clairToken");
+  // =====================================================
+  // MARK PROCUREMENT AS DELIVERED
+  // =====================================================
 
-    if (!token) {
-      throw new Error(
-        "You are not logged in."
-      );
-    }
+  const handleDeliver = async (
+    procurementId
+  ) => {
+    try {
+      setDeliveringId(procurementId);
+      setError("");
+      setSuccess("");
 
-    const response = await fetch(
-      `http://localhost:5000/api/vendors/procurements/${procurementId}/deliver`,
-      {
-        method: "PATCH",
+      const token =
+        localStorage.getItem("clairToken");
 
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
       }
-    );
 
-    const data =
-      await response.json();
+      const response = await fetch(
+        `http://localhost:5000/api/vendors/procurements/${procurementId}/deliver`,
+        {
+          method: "PATCH",
 
-    if (!response.ok) {
-      throw new Error(
-        data.message ||
-          "Failed to mark procurement as delivered"
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-    }
 
-    setSuccess(
-      "Procurement marked as delivered!"
-    );
+      const data =
+        await response.json();
 
-    await fetchProcurements();
-
-  } catch (error) {
-    console.error(
-      "Delivery error:",
-      error
-    );
-
-    setError(error.message);
-
-  } finally {
-    setDeliveringId(null);
-  }
-};
-
-const handleUploadDocument = async (procurementId) => {
-  try {
-    setUploadingDocumentId(procurementId);
-    setError("");
-    setSuccess("");
-
-    if (!documentUrl.trim()) {
-      throw new Error(
-        "Please enter a document URL."
-      );
-    }
-
-    const token =
-      localStorage.getItem("clairToken");
-
-    if (!token) {
-      throw new Error(
-        "You are not logged in."
-      );
-    }
-
-    const response = await fetch(
-      "http://localhost:5000/api/documents",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-
-        body: JSON.stringify({
-          procurementId,
-          type: documentType,
-          fileUrl: documentUrl.trim(),
-        }),
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to mark procurement as delivered"
+        );
       }
-    );
 
-    const data =
-      await response.json();
+      setSuccess(
+        "Procurement marked as delivered!"
+      );
 
-    if (!response.ok) {
-      throw new Error(
-        data.message ||
-          "Failed to upload document"
+      await fetchProcurements();
+
+    } catch (error) {
+      console.error(
+        "Delivery error:",
+        error
+      );
+
+      setError(error.message);
+
+    } finally {
+      setDeliveringId(null);
+    }
+  };
+
+  // =====================================================
+  // UPLOAD DOCUMENT
+  // =====================================================
+
+  const handleUploadDocument = async (
+    procurementId
+  ) => {
+    try {
+      setUploadingDocumentId(
+        procurementId
+      );
+
+      setError("");
+      setSuccess("");
+
+      if (!documentUrl.trim()) {
+        throw new Error(
+          "Please enter a document URL."
+        );
+      }
+
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/documents",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            procurementId,
+            type: documentType,
+            fileUrl:
+              documentUrl.trim(),
+          }),
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to upload document"
+        );
+      }
+
+      setSuccess(
+        "Document submitted successfully!"
+      );
+
+      setDocumentUrl("");
+
+      await fetchProcurements();
+
+    } catch (error) {
+      console.error(
+        "Document upload error:",
+        error
+      );
+
+      setError(error.message);
+
+    } finally {
+      setUploadingDocumentId(
+        null
       );
     }
+<<<<<<< HEAD
 
     setSuccess(
       "Document submitted successfully!"
@@ -520,6 +760,9 @@ const handleUploadDocument = async (procurementId) => {
   };
 
 >>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
+=======
+  };
+>>>>>>> 8eb19b6 (Integrate blockchain funding flow)
 
   // =====================================================
   // STATISTICS
@@ -564,7 +807,6 @@ const handleUploadDocument = async (procurementId) => {
       0
     );
 
-
   // =====================================================
   // UI
   // =====================================================
@@ -599,18 +841,101 @@ const handleUploadDocument = async (procurementId) => {
 
         </div>
 
+        <div className="flex flex-wrap gap-3">
 
-        <button
-          onClick={fetchProcurements}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
-          Refresh
-        </button>
+          {/* WALLET BUTTON */}
+
+          <button
+            onClick={
+              handleConnectWallet
+            }
+            disabled={
+              connectingWallet
+            }
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {connectingWallet
+              ? "Connecting..."
+              : walletAddress
+              ? "Wallet Connected"
+              : "Connect MetaMask"}
+          </button>
+
+          <button
+            onClick={
+              fetchProcurements
+            }
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Refresh
+          </button>
+
+        </div>
 
       </div>
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+      {/* WALLET INFORMATION */}
+
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+
+        <p className="text-sm font-semibold text-slate-800">
+          Blockchain Wallet
+        </p>
+
+        {walletAddress ? (
+
+          <div className="mt-2">
+
+            <p className="text-xs text-slate-500">
+              Your vendor payment wallet:
+            </p>
+
+            <p className="mt-1 break-all font-mono text-sm text-slate-700">
+              {walletAddress}
+            </p>
+
+            <p className="mt-2 text-xs text-green-600">
+              ✓ Connected to Sepolia
+            </p>
+
+          </div>
+
+        ) : (
+
+          <div>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Connect your MetaMask wallet so
+              blockchain milestone payments can
+              be sent to you.
+            </p>
+
+            <button
+              onClick={
+                handleConnectWallet
+              }
+              disabled={
+                connectingWallet
+              }
+              className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {connectingWallet
+                ? "Connecting..."
+                : "Connect Wallet"}
+            </button>
+
+          </div>
+
+        )}
+
+      </section>
+
+
+>>>>>>> 8eb19b6 (Integrate blockchain funding flow)
       {/* SUCCESS */}
 =======
       {/* =================================================
@@ -773,12 +1098,13 @@ const handleUploadDocument = async (procurementId) => {
                 (procurement) => (
 
                   <div
-                    key={procurement.id}
+                    key={
+                      procurement.id
+                    }
                     className="rounded-xl border border-slate-200 bg-white p-6"
                   >
 
                     <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-
 
                       {/* LEFT */}
 
@@ -791,7 +1117,6 @@ const handleUploadDocument = async (procurementId) => {
                             {procurement.id}
                           </h4>
 
-
                           <span
                             className={`rounded-full px-3 py-1 text-xs font-medium ${
                               procurement.status ===
@@ -800,11 +1125,12 @@ const handleUploadDocument = async (procurementId) => {
                                 : "bg-blue-100 text-blue-700"
                             }`}
                           >
-                            {procurement.status}
+                            {
+                              procurement.status
+                            }
                           </span>
 
                         </div>
-
 
                         <h5 className="mt-3 font-medium text-slate-800">
 
@@ -813,7 +1139,6 @@ const handleUploadDocument = async (procurementId) => {
                             "Campaign"}
 
                         </h5>
-
 
                         <p className="mt-1 text-sm text-slate-500">
 
@@ -824,10 +1149,11 @@ const handleUploadDocument = async (procurementId) => {
 
                         </p>
 
-
                         <p className="mt-3 text-sm text-slate-600">
 
-                          {procurement.description}
+                          {
+                            procurement.description
+                          }
 
                         </p>
 
@@ -849,122 +1175,144 @@ const handleUploadDocument = async (procurementId) => {
 
                         </p>
 
-
                         <p className="mt-1 text-xs text-slate-500">
                           Procurement amount
                         </p>
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                         {/* ACCEPT BUTTON */}
+=======
+                        {/* ACCEPT */}
+>>>>>>> 8eb19b6 (Integrate blockchain funding flow)
 
-{/* PROCUREMENT ACTIONS */}
+                        {procurement.status ===
+                          "CREATED" && (
 
-{procurement.status === "CREATED" && (
-  <button
-    onClick={() =>
-      handleAccept(procurement.id)
-    }
-    disabled={
-      acceptingId === procurement.id
-    }
-    className="mt-4 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    {acceptingId === procurement.id
-      ? "Accepting..."
-      : "Accept Procurement"}
-  </button>
-)}
+                          <button
+                            onClick={() =>
+                              handleAccept(
+                                procurement.id
+                              )
+                            }
+                            disabled={
+                              acceptingId ===
+                              procurement.id
+                            }
+                            className="mt-4 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
 
+                            {acceptingId ===
+                            procurement.id
+                              ? "Accepting..."
+                              : "Accept Procurement"}
 
-{procurement.status === "ORDERED" && (
-  <button
-    onClick={() =>
-      handleDeliver(procurement.id)
-    }
-    disabled={
-      deliveringId === procurement.id
-    }
-    className="mt-4 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    {deliveringId === procurement.id
-      ? "Marking Delivered..."
-      : "Mark as Delivered"}
-  </button>
-)}
-{procurement.status ===
-  "DELIVERED" && (
-
-  <div className="mt-5 border-t border-slate-200 pt-5">
-
-    <p className="font-semibold text-slate-800">
-      Submit Documents
-    </p>
-
-    <p className="mt-1 text-xs text-slate-500">
-      Submit an invoice, receipt or other
-      supporting document.
-    </p>
+                          </button>
+                        )}
 
 
-    <select
-      value={documentType}
-      onChange={(e) =>
-        setDocumentType(
-          e.target.value
-        )
-      }
-      className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-    >
+                        {/* DELIVER */}
 
-      <option value="INVOICE">
-        Invoice
-      </option>
+                        {procurement.status ===
+                          "ORDERED" && (
 
-      <option value="DELIVERY_RECEIPT">
-        Delivery Receipt
-      </option>
+                          <button
+                            onClick={() =>
+                              handleDeliver(
+                                procurement.id
+                              )
+                            }
+                            disabled={
+                              deliveringId ===
+                              procurement.id
+                            }
+                            className="mt-4 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
 
-      <option value="IMAGE">
-        Delivery Image
-      </option>
+                            {deliveringId ===
+                            procurement.id
+                              ? "Marking Delivered..."
+                              : "Mark as Delivered"}
 
-    </select>
-
-
-    <input
-      type="text"
-      value={documentUrl}
-      onChange={(e) =>
-        setDocumentUrl(
-          e.target.value
-        )
-      }
-      placeholder="Enter document URL"
-      className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-    />
+                          </button>
+                        )}
 
 
-    <button
-      onClick={() =>
-        handleUploadDocument(
-          procurement.id
-        )
-      }
-      disabled={
-        uploadingDocumentId ===
-        procurement.id
-      }
-      className="mt-3 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-    >
+                        {/* DOCUMENTS */}
 
-      {uploadingDocumentId ===
-      procurement.id
-        ? "Submitting..."
-        : "Submit Document"}
+                        {procurement.status ===
+                          "DELIVERED" && (
 
-    </button>
+                          <div className="mt-5 border-t border-slate-200 pt-5">
 
+                            <p className="font-semibold text-slate-800">
+                              Submit Documents
+                            </p>
+
+                            <p className="mt-1 text-xs text-slate-500">
+                              Submit an invoice, receipt
+                              or other supporting
+                              document.
+                            </p>
+
+
+                            <select
+                              value={
+                                documentType
+                              }
+                              onChange={(e) =>
+                                setDocumentType(
+                                  e.target.value
+                                )
+                              }
+                              className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            >
+
+                              <option value="INVOICE">
+                                Invoice
+                              </option>
+
+                              <option value="DELIVERY_RECEIPT">
+                                Delivery Receipt
+                              </option>
+
+                              <option value="IMAGE">
+                                Delivery Image
+                              </option>
+
+                            </select>
+
+
+                            <input
+                              type="text"
+                              value={
+                                documentUrl
+                              }
+                              onChange={(e) =>
+                                setDocumentUrl(
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter document URL"
+                              className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            />
+
+
+                            <button
+                              onClick={() =>
+                                handleUploadDocument(
+                                  procurement.id
+                                )
+                              }
+                              disabled={
+                                uploadingDocumentId ===
+                                procurement.id
+                              }
+                              className="mt-3 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                            >
+
+<<<<<<< HEAD
   </div>
 )}
 =======
@@ -1112,12 +1460,21 @@ const handleUploadDocument = async (procurementId) => {
                               procurement.id
                                 ? "Uploading..."
                                 : "Upload Document"}
+=======
+                              {uploadingDocumentId ===
+                              procurement.id
+                                ? "Submitting..."
+                                : "Submit Document"}
+>>>>>>> 8eb19b6 (Integrate blockchain funding flow)
 
                             </button>
 
                           </div>
                         )}
+<<<<<<< HEAD
 >>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
+=======
+>>>>>>> 8eb19b6 (Integrate blockchain funding flow)
 
                       </div>
 

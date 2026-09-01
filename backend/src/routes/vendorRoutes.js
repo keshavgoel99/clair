@@ -11,11 +11,152 @@ const router = express.Router();
 
 
 // =====================================================
-// GET AVAILABLE PROCUREMENTS
+// SAVE VENDOR WALLET ADDRESS
 // =====================================================
 //
-// Vendors can see procurements that have not yet been
-// assigned to another vendor.
+// Vendors connect MetaMask from the frontend and send
+// their wallet address here.
+//
+// The vendor ID ALWAYS comes from the JWT.
+// =====================================================
+
+router.patch(
+  "/wallet",
+  authenticateToken,
+  authorizeRoles("VENDOR"),
+
+  async (req, res) => {
+    try {
+      const {
+        walletAddress,
+      } = req.body;
+
+
+      // -----------------------------------------------
+      // Validate wallet address
+      // -----------------------------------------------
+
+      if (
+        typeof walletAddress !== "string" ||
+        !/^0x[a-fA-F0-9]{40}$/.test(
+          walletAddress
+        )
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid Ethereum wallet address",
+        });
+      }
+
+
+      // -----------------------------------------------
+      // Save wallet address
+      // -----------------------------------------------
+
+      const vendor =
+        await prisma.user.update({
+          where: {
+            id: req.user.id,
+          },
+
+          data: {
+            walletAddress:
+              walletAddress.toLowerCase(),
+          },
+
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            walletAddress: true,
+          },
+        });
+
+
+      res.json({
+        message:
+          "Wallet address saved successfully",
+
+        vendor,
+      });
+
+    } catch (error) {
+      console.error(
+        "Save vendor wallet error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Unable to save wallet address",
+      });
+    }
+  }
+);
+
+
+// =====================================================
+// GET MY WALLET
+// =====================================================
+//
+// Allows the vendor dashboard to retrieve the currently
+// saved wallet address.
+// =====================================================
+
+router.get(
+  "/wallet",
+  authenticateToken,
+  authorizeRoles("VENDOR"),
+
+  async (req, res) => {
+    try {
+      const vendor =
+        await prisma.user.findUnique({
+          where: {
+            id: req.user.id,
+          },
+
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            walletAddress: true,
+          },
+        });
+
+
+      if (!vendor) {
+        return res.status(404).json({
+          message:
+            "Vendor not found",
+        });
+      }
+
+
+      res.json({
+        walletAddress:
+          vendor.walletAddress || null,
+      });
+
+    } catch (error) {
+      console.error(
+        "Get vendor wallet error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Unable to fetch wallet address",
+      });
+    }
+  }
+);
+
+
+// =====================================================
+// GET AVAILABLE PROCUREMENTS
 // =====================================================
 
 router.get(
@@ -74,20 +215,7 @@ router.get(
 
 
 // =====================================================
-// ACCEPT PROCUREMENT
-// =====================================================
-//
-// Vendor accepts an available procurement.
-// =====================================================
-
-// =====================================================
 // MARK PROCUREMENT AS DELIVERED
-// =====================================================
-//
-// Only the assigned vendor can mark the procurement
-// as delivered.
-//
-// ORDERED → DELIVERED
 // =====================================================
 
 router.patch(
@@ -111,11 +239,7 @@ router.patch(
         await prisma.procurement.findFirst({
           where: {
             id: procurementId,
-
-            // Must belong to this vendor
             vendorId: req.user.id,
-
-            // Can only deliver an accepted order
             status: "ORDERED",
           },
         });
@@ -157,6 +281,7 @@ router.patch(
                 id: true,
                 name: true,
                 email: true,
+                walletAddress: true,
               },
             },
           },
@@ -184,6 +309,11 @@ router.patch(
   }
 );
 
+
+// =====================================================
+// ACCEPT PROCUREMENT
+// =====================================================
+
 router.patch(
   "/procurements/:id/accept",
   authenticateToken,
@@ -201,8 +331,6 @@ router.patch(
         });
       }
 
-
-      // Find only an unassigned CREATED procurement
 
       const procurement =
         await prisma.procurement.findFirst({
@@ -222,8 +350,6 @@ router.patch(
       }
 
 
-      // Assign procurement to vendor
-
       const updatedProcurement =
         await prisma.procurement.update({
           where: {
@@ -232,7 +358,6 @@ router.patch(
 
           data: {
             vendorId: req.user.id,
-
             status: "ORDERED",
           },
 
@@ -256,6 +381,7 @@ router.patch(
                 id: true,
                 name: true,
                 email: true,
+                walletAddress: true,
               },
             },
           },

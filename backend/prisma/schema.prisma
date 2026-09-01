@@ -31,11 +31,12 @@ enum ProcurementStatus {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         UserRole
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  role          UserRole
+  walletAddress String?
 
   campaigns    Campaign[]
 
@@ -48,21 +49,23 @@ model User {
 }
 
 model Campaign {
-  id           Int      @id @default(autoincrement())
-  title        String
-  description  String
-  category     String
-  target       Decimal
-  active       Boolean  @default(true)
+    id           Int      @id @default(autoincrement())
+    title        String
+    description  String
+    category     String
+    target       Decimal
+    active       Boolean  @default(true)
 
-  ngoId        Int
-  ngo          User     @relation(fields: [ngoId], references: [id])
-  
-  pledges      Pledge[]
-  procurements Procurement[]
+    ngoId        Int
+    ngo          User     @relation(fields: [ngoId], references: [id])
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+    blockchainCampaignId Int?
+
+    pledges      Pledge[]
+    procurements Procurement[]
+
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 }
 
 model Pledge {

@@ -10,8 +10,17 @@ const {
 const router = express.Router()
 
 
+// =====================================================
 // CREATE PLEDGE
+// =====================================================
 // Only authenticated donors can create pledges.
+//
+// If blockchainTx is supplied, the pledge is recorded
+// as LOCKED because the blockchain transaction has been
+// completed by the frontend.
+//
+// donorId ALWAYS comes from the authenticated JWT.
+// =====================================================
 
 router.post(
   '/',
@@ -23,10 +32,13 @@ router.post(
       const {
         campaignId,
         amount,
+        blockchainTx,
       } = req.body
 
 
+      // -----------------------------------------------
       // Validate campaign ID
+      // -----------------------------------------------
 
       if (campaignId === undefined) {
         return res.status(400).json({
@@ -38,6 +50,7 @@ router.post(
       const parsedCampaignId =
         Number(campaignId)
 
+
       if (
         !Number.isInteger(parsedCampaignId) ||
         parsedCampaignId <= 0
@@ -48,9 +61,12 @@ router.post(
       }
 
 
+      // -----------------------------------------------
       // Validate amount
+      // -----------------------------------------------
 
       const pledgeAmount = Number(amount)
+
 
       if (
         !Number.isFinite(pledgeAmount) ||
@@ -62,7 +78,29 @@ router.post(
       }
 
 
+      // -----------------------------------------------
+      // Validate blockchain transaction hash
+      // -----------------------------------------------
+
+      if (
+        blockchainTx !== undefined &&
+        blockchainTx !== null &&
+        blockchainTx !== ''
+      ) {
+        if (
+          typeof blockchainTx !== 'string' ||
+          !/^0x[a-fA-F0-9]{64}$/.test(blockchainTx)
+        ) {
+          return res.status(400).json({
+            message: 'Invalid blockchain transaction hash',
+          })
+        }
+      }
+
+
+      // -----------------------------------------------
       // Find campaign
+      // -----------------------------------------------
 
       const campaign =
         await prisma.campaign.findUnique({
@@ -79,7 +117,9 @@ router.post(
       }
 
 
+      // -----------------------------------------------
       // Check campaign is active
+      // -----------------------------------------------
 
       if (!campaign.active) {
         return res.status(400).json({
@@ -88,7 +128,9 @@ router.post(
       }
 
 
+      // -----------------------------------------------
       // Find existing pledges
+      // -----------------------------------------------
 
       const existingPledges =
         await prisma.pledge.aggregate({
@@ -116,6 +158,10 @@ router.post(
         )
 
 
+      // -----------------------------------------------
+      // Calculate remaining campaign amount
+      // -----------------------------------------------
+
       const targetAmount =
         Number(campaign.target)
 
@@ -124,7 +170,9 @@ router.post(
         targetAmount - alreadyPledged
 
 
+      // -----------------------------------------------
       // Campaign already fully funded
+      // -----------------------------------------------
 
       if (remainingAmount <= 0) {
         return res.status(400).json({
@@ -134,7 +182,9 @@ router.post(
       }
 
 
+      // -----------------------------------------------
       // Don't allow pledge above remaining target
+      // -----------------------------------------------
 
       if (pledgeAmount > remainingAmount) {
         return res.status(400).json({
@@ -144,11 +194,34 @@ router.post(
       }
 
 
-      // Create pledge
+      // -----------------------------------------------
+      // Determine pledge status
+      // -----------------------------------------------
       //
-      // IMPORTANT:
-      // donorId comes from the JWT.
-      // The frontend does NOT choose the donor.
+      // Blockchain transaction exists:
+      //     LOCKED
+      //
+      // No blockchain transaction:
+      //     PLEDGED
+      //
+      // NOTE:
+      // Later we should verify the transaction on-chain
+      // before trusting LOCKED status.
+      // -----------------------------------------------
+
+      const pledgeStatus =
+        blockchainTx
+          ? 'LOCKED'
+          : 'PLEDGED'
+
+
+      // -----------------------------------------------
+      // Create pledge
+      // -----------------------------------------------
+      //
+      // donorId comes from the verified JWT.
+      // The frontend cannot choose the donor.
+      // -----------------------------------------------
 
       const pledge =
         await prisma.pledge.create({
@@ -158,6 +231,11 @@ router.post(
             donorId: req.user.id,
 
             campaignId: parsedCampaignId,
+
+            blockchainTx:
+              blockchainTx || null,
+
+            status: pledgeStatus,
           },
 
           include: {
@@ -176,8 +254,14 @@ router.post(
         })
 
 
+      // -----------------------------------------------
+      // Response
+      // -----------------------------------------------
+
       res.status(201).json({
-        message: 'Pledge created successfully',
+        message:
+          'Pledge created successfully',
+
         pledge,
       })
 
@@ -188,15 +272,19 @@ router.post(
       )
 
       res.status(500).json({
-        message: 'Unable to create pledge',
+        message:
+          'Unable to create pledge',
       })
     }
   }
 )
 
 
+// =====================================================
 // GET MY PLEDGES
+// =====================================================
 // Only authenticated donors can view their pledges.
+// =====================================================
 
 router.get(
   '/my',
@@ -242,7 +330,8 @@ router.get(
       )
 
       res.status(500).json({
-        message: 'Unable to fetch pledges',
+        message:
+          'Unable to fetch pledges',
       })
     }
   }

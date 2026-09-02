@@ -478,10 +478,9 @@ function VendorDashboard() {
       setError(error.message);
 
     } finally {
-      setUploadingDocumentId(
-        null
-      );
+      setUploadingDocumentId(null);
     }
+  };
 
    
   // =====================================================
@@ -907,7 +906,6 @@ function VendorDashboard() {
       </section>
     </main>
   );
-}
 }
 
 export default VendorDashboard;

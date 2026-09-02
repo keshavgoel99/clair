@@ -47,6 +47,33 @@ function NGODashboard() {
     useState(true);
   const [procurementFetchError, setProcurementFetchError] =
     useState("");
+  const [documents, setDocuments] = useState({});
+  const [documentsLoading, setDocumentsLoading] = useState({});
+  const [notification, setNotification] = useState(null);
+  
+  const getDocumentLabel = (type) => {
+  if (type === "DELIVERY_RECEIPT") {
+    return "Delivery Receipt";
+  }
+
+  if (type === "IMAGE") {
+    return "Delivery Image";
+  }
+
+  return "Invoice";
+};
+
+const getDocumentUrl = (fileUrl) => {
+  if (!fileUrl) {
+    return "#";
+  }
+
+  if (fileUrl.startsWith("http")) {
+    return fileUrl;
+  }
+
+  return `http://localhost:5000${fileUrl}`;
+};
 
   // -----------------------------------------
   // VENDOR STATE
@@ -185,14 +212,163 @@ function NGODashboard() {
         );
       }
 
-      setProcurements(data.procurements || []);
-    } catch (error) {
+      const procurementList = data.procurements || [];
+      setProcurements(procurementList);
+      await fetchAllDocuments(procurementList);    } catch (error) {
       console.error("Error loading procurements:", error);
       setProcurementFetchError(error.message);
     } finally {
       setLoadingProcurements(false);
     }
   };
+
+// -----------------------------------------
+// FETCH DOCUMENTS FOR PROCUREMENT
+// -----------------------------------------
+
+const fetchDocuments = async (procurementId) => {
+  try {
+    setDocumentsLoading((previous) => ({
+      ...previous,
+      [procurementId]: true,
+    }));
+
+    const token = localStorage.getItem("clairToken");
+
+    if (!token) {
+      return;
+    }
+
+    const response = await fetch(
+      `http://localhost:5000/api/documents/procurement/${procurementId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Failed to load documents"
+      );
+    }
+
+    setDocuments((previous) => ({
+      ...previous,
+      [procurementId]: data.documents || [],
+    }));
+  } catch (error) {
+    console.error(
+      `Error loading documents for procurement ${procurementId}:`,
+      error
+    );
+
+    setDocuments((previous) => ({
+      ...previous,
+      [procurementId]: [],
+    }));
+  } finally {
+    setDocumentsLoading((previous) => ({
+      ...previous,
+      [procurementId]: false,
+    }));
+  }
+};
+
+const fetchAllDocuments = async (procurementList) => {
+  await Promise.all(
+    procurementList.map((procurement) =>
+      fetchDocuments(procurement.id)
+    )
+  );
+};
+
+const handleApprove = async (procurementId) => {
+  try {
+    const token = localStorage.getItem("clairToken");
+
+    const response = await fetch(
+      `http://localhost:5000/api/verifications/${procurementId}/approve`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Unable to approve procurement");
+    }
+    setNotification({
+      type: "success",
+      message: "Procurement approved successfully.",
+    });
+
+    await fetchProcurements();
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+
+  } catch (error) {
+    console.error("Approval error:", error);
+    setNotification({
+      type: "error",
+      message: error.message || "Unable to approve procurement.",
+    });
+  }
+};
+
+
+const handleReject = async (procurementId) => {  
+  try {
+    const token = localStorage.getItem("clairToken");
+
+    const response = await fetch(
+      `http://localhost:5000/api/verifications/${procurementId}/reject`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Unable to reject procurement");
+    }
+
+    setNotification({
+      type: "success",
+      message: "Procurement rejected.",
+    });
+
+    await fetchProcurements();
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  } catch (error) {
+    console.error("Rejection error:", error);
+
+    setNotification({
+      type: "error",
+      message: error.message || "Unable to reject procurement.",
+    });
+  }
+};
 
   // =====================================================
   // CREATE CAMPAIGN
@@ -1293,20 +1469,269 @@ function NGODashboard() {
 
                         {/* STATUS */}
 
-                        <p
-                          style={{
-                            ...styles.pledgeText,
-                            marginTop: "12px",
-                          }}
-                        >
-                          <strong>
-                            Status:
-                          </strong>{" "}
-                          {status.replaceAll(
-                            "_",
-                            " "
-                          )}
-                        </p>
+<p
+  style={{
+    ...styles.pledgeText,
+    marginTop: "12px",
+  }}
+>
+  <strong>
+    Status:
+  </strong>{" "}
+  {status.replaceAll("_", " ")}
+</p>
+
+{/* DOCUMENTS */}
+
+<div
+  style={{
+    marginTop: "18px",
+    paddingTop: "18px",
+    borderTop: "1px solid #e5e7eb",
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: "10px",
+    }}
+  >
+    <div>
+      <p
+        style={{
+          margin: 0,
+          fontWeight: "700",
+          color: "#111827",
+        }}
+      >
+        Procurement Documents
+      </p>
+
+      <p
+        style={{
+          marginTop: "4px",
+          fontSize: "12px",
+          color: "#777",
+        }}
+      >
+        Supporting documents uploaded by the vendor.
+      </p>
+    </div>
+
+    {documents[procurement.id]?.length > 0 && (
+      <span
+        style={{
+          backgroundColor: "#dcfce7",
+          color: "#166534",
+          padding: "5px 9px",
+          borderRadius: "20px",
+          fontSize: "11px",
+          fontWeight: "700",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {documents[procurement.id].length} submitted
+      </span>
+    )}
+  </div>
+
+  {/* DOCUMENT LOADING */}
+
+  {documentsLoading[procurement.id] && (
+    <p
+      style={{
+        marginTop: "12px",
+        fontSize: "13px",
+        color: "#777",
+      }}
+    >
+      Loading documents...
+    </p>
+  )}
+
+  {/* DOCUMENT LIST */}
+
+  {!documentsLoading[procurement.id] &&
+    documents[procurement.id]?.length > 0 && (
+      <div
+        style={{
+          marginTop: "12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+        }}
+      >
+        {documents[procurement.id].map((document) => (
+          <div
+            key={document.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "12px",
+              padding: "10px 12px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#334155",
+                }}
+              >
+                ✓{" "}
+                {getDocumentLabel(
+                  document.type
+                )}
+              </p>
+
+              <p
+                style={{
+                  marginTop: "3px",
+                  fontSize: "11px",
+                  color: "#777",
+                }}
+              >
+                Uploaded{" "}
+                {document.createdAt
+                  ? new Date(
+                      document.createdAt
+                    ).toLocaleString()
+                  : "recently"}
+              </p>
+            </div>
+
+            <a
+              href={getDocumentUrl(
+                document.fileUrl
+              )}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                backgroundColor: "#2563eb",
+                color: "white",
+                padding: "7px 12px",
+                borderRadius: "6px",
+                fontSize: "11px",
+                fontWeight: "600",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              View Document
+            </a>
+          </div>
+        ))}
+      </div>
+    )}
+
+  {/* NO DOCUMENT */}
+
+  {!documentsLoading[procurement.id] &&
+    (!documents[procurement.id] ||
+      documents[procurement.id].length === 0) && (
+      <div
+        style={{
+          marginTop: "12px",
+          padding: "12px",
+          border: "1px dashed #cbd5e1",
+          borderRadius: "8px",
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontSize: "13px",
+            color: "#64748b",
+          }}
+        >
+          No procurement documents uploaded yet.
+        </p>
+      </div>
+    )}
+
+  {/* VERIFICATION STATE */}
+
+{status === "VERIFICATION_PENDING" && (
+  <div
+    style={{
+      marginTop: "12px",
+      padding: "14px",
+      backgroundColor: "#faf5ff",
+      border: "1px solid #e9d5ff",
+      borderRadius: "8px",
+    }}
+  >
+    <p
+      style={{
+        margin: 0,
+        fontSize: "14px",
+        fontWeight: "700",
+        color: "#7e22ce",
+      }}
+    >
+      Verification Pending
+    </p>
+
+    <p
+      style={{
+        marginTop: "5px",
+        marginBottom: "12px",
+        fontSize: "12px",
+        color: "#9333ea",
+      }}
+    >
+      The vendor has submitted procurement proof.
+      Review the documents before making your decision.
+    </p>
+
+    <div
+      style={{
+        display: "flex",
+        gap: "10px",
+      }}
+    >
+      <button
+        onClick={() => handleApprove(procurement.id)}
+        style={{
+          padding: "9px 16px",
+          border: "none",
+          borderRadius: "6px",
+          backgroundColor: "#16a34a",
+          color: "white",
+          fontWeight: "600",
+          cursor: "pointer",
+        }}
+      >
+        ✓ Approve
+      </button>
+
+      <button
+        onClick={() => handleReject(procurement.id)}
+        style={{
+          padding: "9px 16px",
+          border: "none",
+          borderRadius: "6px",
+          backgroundColor: "#dc2626",
+          color: "white",
+          fontWeight: "600",
+          cursor: "pointer",
+        }}
+      >
+        ✕ Reject
+      </button>
+    </div>
+  </div>
+)}
+
+</div>
                       </div>
                     );
                   })}
@@ -1315,6 +1740,68 @@ function NGODashboard() {
           </div>
         </div>
       </div>
+      {notification && (
+  <div
+    style={{
+      position: "fixed",
+      top: "24px",
+      right: "24px",
+      zIndex: 9999,
+      minWidth: "300px",
+      maxWidth: "400px",
+      padding: "14px 18px",
+      borderRadius: "10px",
+      backgroundColor:
+        notification.type === "success"
+          ? "#f0fdf4"
+          : "#fef2f2",
+      border:
+        notification.type === "success"
+          ? "1px solid #bbf7d0"
+          : "1px solid #fecaca",
+      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+    }}
+  >
+    <span
+      style={{
+        fontSize: "18px",
+        fontWeight: "700",
+      }}
+    >
+      {notification.type === "success" ? "✓" : "!"}
+    </span>
+
+    <span
+      style={{
+        fontSize: "14px",
+        fontWeight: "600",
+        color:
+          notification.type === "success"
+            ? "#166534"
+            : "#991b1b",
+      }}
+    >
+      {notification.message}
+    </span>
+
+    <button
+      onClick={() => setNotification(null)}
+      style={{
+        marginLeft: "auto",
+        border: "none",
+        background: "transparent",
+        fontSize: "18px",
+        cursor: "pointer",
+        color: "#6b7280",
+      }}
+    >
+      ×
+    </button>
+  </div>
+)}
     </div>
   );
 }

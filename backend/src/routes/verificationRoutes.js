@@ -368,5 +368,165 @@ prefer FLAG_FOR_REVIEW rather than assuming the bill is valid.
   }
 );
 
+// =====================================================
+// HUMAN APPROVAL
+// =====================================================
+
+router.post(
+  "/:procurementId/approve",
+  authenticateToken,
+  authorizeRoles("NGO"),
+
+  async (req, res) => {
+    try {
+      const procurementId = Number(req.params.procurementId);
+
+      if (!Number.isInteger(procurementId)) {
+        return res.status(400).json({
+          message: "Invalid procurement ID",
+        });
+      }
+
+      // Make sure this procurement belongs to this NGO
+      const procurement = await prisma.procurement.findFirst({
+        where: {
+          id: procurementId,
+          ngoId: req.user.id,
+          status: "VERIFICATION_PENDING",
+        },
+        include: {
+          verification: true,
+        },
+      });
+
+      if (!procurement) {
+        return res.status(404).json({
+          message: "Procurement is not ready for approval",
+        });
+      }
+
+      if (!procurement.verification) {
+        return res.status(404).json({
+          message: "Verification record not found",
+        });
+      }
+
+      // Update both verification and procurement
+      const result = await prisma.$transaction([
+        prisma.verification.update({
+          where: {
+            procurementId,
+          },
+          data: {
+            status: "APPROVED",
+            reviewedAt: new Date(),
+          },
+        }),
+
+        prisma.procurement.update({
+          where: {
+            id: procurementId,
+          },
+          data: {
+            status: "VERIFIED",
+          },
+        }),
+      ]);
+
+      return res.json({
+        message: "Procurement approved successfully",
+        verification: result[0],
+        procurement: result[1],
+      });
+    } catch (error) {
+      console.error("Approval error:", error);
+
+      return res.status(500).json({
+        message: "Unable to approve procurement",
+      });
+    }
+  }
+);
+
+
+// =====================================================
+// HUMAN REJECTION
+// =====================================================
+
+router.post(
+  "/:procurementId/reject",
+  authenticateToken,
+  authorizeRoles("NGO"),
+
+  async (req, res) => {
+    try {
+      const procurementId = Number(req.params.procurementId);
+
+      if (!Number.isInteger(procurementId)) {
+        return res.status(400).json({
+          message: "Invalid procurement ID",
+        });
+      }
+
+      // Make sure this procurement belongs to this NGO
+      const procurement = await prisma.procurement.findFirst({
+        where: {
+          id: procurementId,
+          ngoId: req.user.id,
+          status: "VERIFICATION_PENDING",
+        },
+        include: {
+          verification: true,
+        },
+      });
+
+      if (!procurement) {
+        return res.status(404).json({
+          message: "Procurement is not ready for rejection",
+        });
+      }
+
+      if (!procurement.verification) {
+        return res.status(404).json({
+          message: "Verification record not found",
+        });
+      }
+
+      // Update both verification and procurement
+      const result = await prisma.$transaction([
+        prisma.verification.update({
+          where: {
+            procurementId,
+          },
+          data: {
+            status: "REJECTED",
+            reviewedAt: new Date(),
+          },
+        }),
+
+        prisma.procurement.update({
+          where: {
+            id: procurementId,
+          },
+          data: {
+            status: "REJECTED",
+          },
+        }),
+      ]);
+
+      return res.json({
+        message: "Procurement rejected successfully",
+        verification: result[0],
+        procurement: result[1],
+      });
+    } catch (error) {
+      console.error("Rejection error:", error);
+
+      return res.status(500).json({
+        message: "Unable to reject procurement",
+      });
+    }
+  }
+);
 
 module.exports = router;

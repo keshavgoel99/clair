@@ -1,289 +1,90 @@
 import { useEffect, useState } from "react";
-
-import {
-  createBlockchainCampaign,
-} from "../blockchain/clairFund";
+import { createBlockchainCampaign } from "../blockchain/clairFund";
 
 function NGODashboard() {
   const [campaigns, setCampaigns] = useState([]);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+  const [campaignError, setCampaignError] = useState("");
 
-  const [loadingCampaigns, setLoadingCampaigns] =
-    useState(true);
+  const [showCreateCampaign, setShowCreateCampaign] = useState(false);
 
-  const [campaignError, setCampaignError] =
-    useState("");
+  // -----------------------------------------
+  // CREATE CAMPAIGN STATE
+  // -----------------------------------------
 
-  const [showCreateCampaign, setShowCreateCampaign] =
-    useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [target, setTarget] = useState("");
 
-<<<<<<< HEAD
   const [creatingCampaign, setCreatingCampaign] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
 
-<<<<<<< HEAD
-  const [showCreateProcurement, setShowCreateProcurement] =
-  useState(false);
-
-const [procurementCampaign, setProcurementCampaign] =
-  useState(null);
-
-const [procurementTitle, setProcurementTitle] =
-  useState("");
-
-const [procurementDescription, setProcurementDescription] =
-  useState("");
-
-const [procurementAmount, setProcurementAmount] =
-  useState("");
-
-const [creatingProcurement, setCreatingProcurement] =
-  useState(false);
-
-const [procurementError, setProcurementError] =
-  useState("");
-
-const [procurementSuccess, setProcurementSuccess] =
-  useState("");
-  const [procurements, setProcurements] = useState([]);
-const [loadingProcurements, setLoadingProcurements] =
-  useState(true);
-const [procurementFetchError, setProcurementFetchError] =
-  useState("");
-
-  const [vendors, setVendors] = useState([]);
-const [selectedVendor, setSelectedVendor] = useState("");
-const [loadingVendors, setLoadingVendors] = useState(false);
   // -----------------------------------------
-  // FETCH CAMPAIGNS
-=======
-  // Create procurement form
+  // PROCUREMENT STATE
+  // -----------------------------------------
+
   const [showCreateProcurement, setShowCreateProcurement] =
     useState(false);
 
   const [procurementCampaign, setProcurementCampaign] =
     useState(null);
 
-  const [procurementTitle, setProcurementTitle] =
-    useState("");
-
+  const [procurementTitle, setProcurementTitle] = useState("");
   const [procurementDescription, setProcurementDescription] =
     useState("");
-
-  const [procurementAmount, setProcurementAmount] =
-    useState("");
+  const [procurementAmount, setProcurementAmount] = useState("");
 
   const [creatingProcurement, setCreatingProcurement] =
     useState(false);
 
-  const [procurementError, setProcurementError] =
-    useState("");
+  const [procurementError, setProcurementError] = useState("");
+  const [procurementSuccess, setProcurementSuccess] = useState("");
 
-  const [procurementSuccess, setProcurementSuccess] =
-    useState("");
-
-  const [procurements, setProcurements] =
-    useState([]);
-
+  const [procurements, setProcurements] = useState([]);
   const [loadingProcurements, setLoadingProcurements] =
     useState(true);
-
   const [procurementFetchError, setProcurementFetchError] =
     useState("");
-
-  // Vendors
-  const [vendors, setVendors] = useState([]);
-  const [selectedVendor, setSelectedVendor] =
-    useState("");
-
-  const [loadingVendors, setLoadingVendors] =
-    useState(false);
-
-
-  // -----------------------------------------
-  // FETCH DATA
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-  // -----------------------------------------
-  // CREATE CAMPAIGN FORM
-  // -----------------------------------------
-
-  const [title, setTitle] =
-    useState("");
-
-  const [description, setDescription] =
-    useState("");
-
-  const [category, setCategory] =
-    useState("");
-
-  const [target, setTarget] =
-    useState("");
-
-  const [creatingCampaign, setCreatingCampaign] =
-    useState(false);
-
-  const [createError, setCreateError] =
-    useState("");
-
-  const [createSuccess, setCreateSuccess] =
-    useState("");
-
-
-  // -----------------------------------------
-  // PROCUREMENT STATE
-  // -----------------------------------------
-
-  const [
-    showCreateProcurement,
-    setShowCreateProcurement,
-  ] = useState(false);
-
-  const [
-    procurementCampaign,
-    setProcurementCampaign,
-  ] = useState(null);
-
-  const [
-    procurementTitle,
-    setProcurementTitle,
-  ] = useState("");
-
-  const [
-    procurementDescription,
-    setProcurementDescription,
-  ] = useState("");
-
-  const [
-    procurementAmount,
-    setProcurementAmount,
-  ] = useState("");
-
-  const [
-    creatingProcurement,
-    setCreatingProcurement,
-  ] = useState(false);
-
-  const [
-    procurementError,
-    setProcurementError,
-  ] = useState("");
-
-  const [
-    procurementSuccess,
-    setProcurementSuccess,
-  ] = useState("");
-
-  const [
-    procurements,
-    setProcurements,
-  ] = useState([]);
-
-  const [
-    loadingProcurements,
-    setLoadingProcurements,
-  ] = useState(true);
-
-  const [
-    procurementFetchError,
-    setProcurementFetchError,
-  ] = useState("");
-
 
   // -----------------------------------------
   // VENDOR STATE
   // -----------------------------------------
 
-  const [
-    vendors,
-    setVendors,
-  ] = useState([]);
-
-  const [
-    selectedVendor,
-    setSelectedVendor,
-  ] = useState("");
-
-  const [
-    loadingVendors,
-    setLoadingVendors,
-  ] = useState(false);
-
+  const [vendors, setVendors] = useState([]);
+  const [selectedVendor, setSelectedVendor] = useState("");
+  const [loadingVendors, setLoadingVendors] = useState(false);
 
   // -----------------------------------------
   // INITIAL LOAD
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
   // -----------------------------------------
 
   useEffect(() => {
     fetchCampaigns();
     fetchProcurements();
-<<<<<<< HEAD
-<<<<<<< HEAD
-      fetchVendors();
-  }, []);
-
-=======
     fetchVendors();
   }, []);
-
-=======
-    fetchVendors();
-  }, []);
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
 
   // -----------------------------------------
   // FETCH CAMPAIGNS
   // -----------------------------------------
 
-<<<<<<< HEAD
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
   const fetchCampaigns = async () => {
     try {
       setLoadingCampaigns(true);
       setCampaignError("");
 
-<<<<<<< HEAD
-<<<<<<< HEAD
       const token = localStorage.getItem("clairToken");
 
       if (!token) {
         throw new Error("You are not logged in.");
-=======
-      const token =
-        localStorage.getItem("clairToken");
-
-      if (!token) {
-        throw new Error(
-          "You are not logged in."
-        );
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-      const token =
-        localStorage.getItem("clairToken");
-
-      if (!token) {
-        throw new Error(
-          "You are not logged in."
-        );
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
       }
 
       const response = await fetch(
         "http://localhost:5000/api/campaigns",
         {
           method: "GET",
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -291,146 +92,22 @@ const [loadingVendors, setLoadingVendors] = useState(false);
         }
       );
 
-<<<<<<< HEAD
-<<<<<<< HEAD
       const data = await response.json();
-=======
-      const data =
-        await response.json();
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            "Failed to load campaigns"
+          data.message || "Failed to load campaigns"
         );
       }
 
-      setCampaigns(
-        data.campaigns || []
-      );
-
+      setCampaigns(data.campaigns || []);
     } catch (error) {
-<<<<<<< HEAD
       console.error("Error loading campaigns:", error);
       setCampaignError(error.message);
-=======
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to load campaigns"
-        );
-      }
-
-      setCampaigns(
-        data.campaigns || []
-      );
-
-    } catch (error) {
-=======
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-      console.error(
-        "Error loading campaigns:",
-        error
-      );
-
-      setCampaignError(
-        error.message
-      );
-
-<<<<<<< HEAD
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
     } finally {
       setLoadingCampaigns(false);
     }
   };
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-
-  // -----------------------------------------
-  // FETCH VENDORS
-  // -----------------------------------------
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-  const fetchVendors = async () => {
-    try {
-      setLoadingVendors(true);
-
-      const token =
-        localStorage.getItem("clairToken");
-
-      if (!token) {
-        throw new Error(
-          "You are not logged in."
-        );
-      }
-
-      const response = await fetch(
-        "http://localhost:5000/api/procurements/vendors",
-        {
-          method: "GET",
-
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to load vendors"
-        );
-      }
-
-      setVendors(
-        data.vendors || []
-      );
-
-    } catch (error) {
-      console.error(
-        "Error loading vendors:",
-        error
-      );
-
-      setCreateError(
-        error.message
-      );
-
-    } finally {
-      setLoadingVendors(false);
-    }
-  };
-
-
-<<<<<<< HEAD
-  } catch (error) {
-    console.error(
-      "Error loading procurements:",
-      error
-    );
-
-    setProcurementFetchError(
-      error.message
-    );
-
-  } finally {
-    setLoadingProcurements(false);
-  }
-};
-=======
-
 
   // -----------------------------------------
   // FETCH VENDORS
@@ -440,20 +117,16 @@ const [loadingVendors, setLoadingVendors] = useState(false);
     try {
       setLoadingVendors(true);
 
-      const token =
-        localStorage.getItem("clairToken");
+      const token = localStorage.getItem("clairToken");
 
       if (!token) {
-        throw new Error(
-          "You are not logged in."
-        );
+        throw new Error("You are not logged in.");
       }
 
       const response = await fetch(
         "http://localhost:5000/api/procurements/vendors",
         {
           method: "GET",
-
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -461,35 +134,22 @@ const [loadingVendors, setLoadingVendors] = useState(false);
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            "Failed to load vendors"
+          data.message || "Failed to load vendors"
         );
       }
 
-      setVendors(
-        data.vendors || []
-      );
-
+      setVendors(data.vendors || []);
     } catch (error) {
-      console.error(
-        "Error loading vendors:",
-        error
-      );
-
-      setCreateError(
-        error.message
-      );
-
+      console.error("Error loading vendors:", error);
+      setCreateError(error.message);
     } finally {
       setLoadingVendors(false);
     }
   };
-
 
   // -----------------------------------------
   // FETCH PROCUREMENTS
@@ -500,20 +160,16 @@ const [loadingVendors, setLoadingVendors] = useState(false);
       setLoadingProcurements(true);
       setProcurementFetchError("");
 
-      const token =
-        localStorage.getItem("clairToken");
+      const token = localStorage.getItem("clairToken");
 
       if (!token) {
-        throw new Error(
-          "You are not logged in."
-        );
+        throw new Error("You are not logged in.");
       }
 
       const response = await fetch(
         "http://localhost:5000/api/procurements",
         {
           method: "GET",
-
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -521,112 +177,25 @@ const [loadingVendors, setLoadingVendors] = useState(false);
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            "Failed to load procurements"
+          data.message || "Failed to load procurements"
         );
       }
 
-      setProcurements(
-        data.procurements || []
-      );
-
+      setProcurements(data.procurements || []);
     } catch (error) {
-      console.error(
-        "Error loading procurements:",
-        error
-      );
-
-      setProcurementFetchError(
-        error.message
-      );
-
+      console.error("Error loading procurements:", error);
+      setProcurementFetchError(error.message);
     } finally {
       setLoadingProcurements(false);
     }
   };
-
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-  // -----------------------------------------
-  // FETCH PROCUREMENTS
-  // -----------------------------------------
-
-  const fetchProcurements = async () => {
-    try {
-      setLoadingProcurements(true);
-      setProcurementFetchError("");
-
-      const token =
-        localStorage.getItem("clairToken");
-
-      if (!token) {
-        throw new Error(
-          "You are not logged in."
-        );
-      }
-
-      const response = await fetch(
-        "http://localhost:5000/api/procurements",
-        {
-          method: "GET",
-
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to load procurements"
-        );
-      }
-
-      setProcurements(
-        data.procurements || []
-      );
-
-    } catch (error) {
-      console.error(
-        "Error loading procurements:",
-        error
-      );
-
-      setProcurementFetchError(
-        error.message
-      );
-
-    } finally {
-      setLoadingProcurements(false);
-    }
-  };
-
 
   // =====================================================
   // CREATE CAMPAIGN
-  // =====================================================
-  //
-  // STEP 1:
-  // Create campaign on Sepolia through MetaMask.
-  //
-  // STEP 2:
-  // Receive blockchain campaign ID.
-  //
-  // STEP 3:
-  // Save normal campaign data + blockchain ID
-  // into PostgreSQL.
   // =====================================================
 
   const handleCreateCampaign = async (e) => {
@@ -635,78 +204,26 @@ const [loadingVendors, setLoadingVendors] = useState(false);
     setCreateError("");
     setCreateSuccess("");
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    // Frontend validation
-    if (!title.trim()) {
-      setCreateError("Campaign title is required.");
-=======
-    if (!title.trim()) {
-      setCreateError(
-        "Campaign title is required."
-      );
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
     // -----------------------------------------
     // VALIDATION
     // -----------------------------------------
 
     if (!title.trim()) {
-      setCreateError(
-        "Campaign title is required."
-      );
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
+      setCreateError("Campaign title is required.");
       return;
     }
 
     if (!description.trim()) {
-<<<<<<< HEAD
-<<<<<<< HEAD
       setCreateError("Campaign description is required.");
-=======
-      setCreateError(
-        "Campaign description is required."
-      );
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-      setCreateError(
-        "Campaign description is required."
-      );
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
       return;
     }
 
     if (!category.trim()) {
-<<<<<<< HEAD
-<<<<<<< HEAD
       setCreateError("Campaign category is required.");
       return;
     }
 
     if (!target || Number(target) <= 0) {
-=======
-      setCreateError(
-        "Campaign category is required."
-      );
-      return;
-    }
-
-=======
-      setCreateError(
-        "Campaign category is required."
-      );
-      return;
-    }
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-    if (
-      !target ||
-      Number(target) <= 0
-    ) {
-<<<<<<< HEAD
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
       setCreateError(
         "Target amount must be greater than 0."
       );
@@ -716,108 +233,26 @@ const [loadingVendors, setLoadingVendors] = useState(false);
     try {
       setCreatingCampaign(true);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
       const token = localStorage.getItem("clairToken");
 
       if (!token) {
         throw new Error("You are not logged in.");
-=======
-      const token =
-        localStorage.getItem("clairToken");
-
-      if (!token) {
-        throw new Error(
-          "You are not logged in."
-        );
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       }
 
-      const response = await fetch(
-        "http://localhost:5000/api/campaigns",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-
-<<<<<<< HEAD
-          // IMPORTANT:
-          // These names exactly match campaignRoutes.js
-          body: JSON.stringify({
-            title: title.trim(),
-            description: description.trim(),
-            category: category.trim(),
-            target: Number(target),
-=======
-          body: JSON.stringify({
-            title:
-              title.trim(),
-
-            description:
-              description.trim(),
-
-            category:
-              category.trim(),
-
-            target:
-              Number(target),
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-          }),
-        }
-      );
-
-<<<<<<< HEAD
-      const data = await response.json();
-
-      if (!response.ok) {
-=======
-      const token =
-        localStorage.getItem("clairToken");
-
-      if (!token) {
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-        throw new Error(
-          "You are not logged in."
-        );
-      }
-
-
-<<<<<<< HEAD
-      // Clear form
-=======
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to create campaign"
-        );
-      }
-
-=======
       // -----------------------------------------
       // STEP 1
       // CREATE BLOCKCHAIN CAMPAIGN
       // -----------------------------------------
 
-      setCreateSuccess(
-        "Connecting to MetaMask..."
-      );
+      setCreateSuccess("Connecting to MetaMask...");
 
       const blockchainResult =
-        await createBlockchainCampaign(
-          target
-        );
+        await createBlockchainCampaign(target);
 
       console.log(
         "Blockchain campaign created:",
         blockchainResult
       );
-
 
       // -----------------------------------------
       // STEP 2
@@ -828,108 +263,58 @@ const [loadingVendors, setLoadingVendors] = useState(false);
         "Blockchain confirmed. Saving campaign..."
       );
 
-      const response =
-        await fetch(
-          "http://localhost:5000/api/campaigns",
-          {
-            method: "POST",
+      const response = await fetch(
+        "http://localhost:5000/api/campaigns",
+        {
+          method: "POST",
 
-            headers: {
-              "Content-Type":
-                "application/json",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
 
-              Authorization:
-                `Bearer ${token}`,
-            },
+          body: JSON.stringify({
+            title: title.trim(),
+            description: description.trim(),
+            category: category.trim(),
+            target: Number(target),
+            blockchainCampaignId:
+              blockchainResult.blockchainCampaignId,
+          }),
+        }
+      );
 
-            body: JSON.stringify({
-              title:
-                title.trim(),
-
-              description:
-                description.trim(),
-
-              category:
-                category.trim(),
-
-              target:
-                Number(target),
-
-              blockchainCampaignId:
-                blockchainResult
-                  .blockchainCampaignId,
-            }),
-          }
-        );
-
-
-      const data =
-        await response.json();
-
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            "Failed to save campaign"
+          data.message || "Failed to save campaign"
         );
       }
-
 
       // -----------------------------------------
       // STEP 3
       // UPDATE UI
       // -----------------------------------------
 
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-      setCampaigns(
-        (previousCampaigns) => [
-          data.campaign,
-          ...previousCampaigns,
-        ]
-      );
-
-<<<<<<< HEAD
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
+      setCampaigns((previousCampaigns) => [
+        data.campaign,
+        ...previousCampaigns,
+      ]);
 
       // -----------------------------------------
       // STEP 4
       // CLEAR FORM
       // -----------------------------------------
 
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
       setTitle("");
       setDescription("");
       setCategory("");
       setTarget("");
-<<<<<<< HEAD
-      setSelectedVendor("");
-<<<<<<< HEAD
-=======
 
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
       setCreateSuccess(
         `Campaign created successfully! Blockchain ID: ${blockchainResult.blockchainCampaignId}`
       );
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-      // Close form after successful creation
-=======
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-      setTimeout(() => {
-        setShowCreateCampaign(false);
-        setCreateSuccess("");
-      }, 1200);
-<<<<<<< HEAD
-=======
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
 
       // -----------------------------------------
       // STEP 5
@@ -940,72 +325,20 @@ const [loadingVendors, setLoadingVendors] = useState(false);
         setShowCreateCampaign(false);
         setCreateSuccess("");
       }, 1500);
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
     } catch (error) {
-      console.error(
-        "Error creating campaign:",
-        error
-      );
+      console.error("Error creating campaign:", error);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-      setCreateError(error.message);
-=======
       setCreateError(
-        error.message
+        error.message || "Unable to create campaign."
       );
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-      setCreateError(
-        error.message ||
-          "Unable to create campaign."
-      );
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
     } finally {
       setCreatingCampaign(false);
     }
   };
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const handleCreateProcurement = async (e) => {
-  e.preventDefault();
-=======
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-
 
   // =====================================================
   // CREATE PROCUREMENT
   // =====================================================
-
-  const handleCreateProcurement =
-    async (e) => {
-      e.preventDefault();
-
-      setProcurementError("");
-      setProcurementSuccess("");
-
-
-      if (!procurementCampaign) {
-        setProcurementError(
-          "Please select a campaign."
-        );
-        return;
-      }
-
-<<<<<<< HEAD
-  } finally {
-    setCreatingProcurement(false);
-  }
-};
-=======
-
-
-  // -----------------------------------------
-  // CREATE PROCUREMENT
-  // -----------------------------------------
 
   const handleCreateProcurement = async (e) => {
     e.preventDefault();
@@ -1013,15 +346,15 @@ const [loadingVendors, setLoadingVendors] = useState(false);
     setProcurementError("");
     setProcurementSuccess("");
 
-    // Campaign
+    // -----------------------------------------
+    // VALIDATION
+    // -----------------------------------------
+
     if (!procurementCampaign) {
-      setProcurementError(
-        "Please select a campaign."
-      );
+      setProcurementError("Please select a campaign.");
       return;
     }
 
-    // Title
     if (!procurementTitle.trim()) {
       setProcurementError(
         "Procurement title is required."
@@ -1029,7 +362,6 @@ const [loadingVendors, setLoadingVendors] = useState(false);
       return;
     }
 
-    // Description
     if (!procurementDescription.trim()) {
       setProcurementError(
         "Procurement description is required."
@@ -1037,7 +369,6 @@ const [loadingVendors, setLoadingVendors] = useState(false);
       return;
     }
 
-    // Amount
     if (
       !procurementAmount ||
       Number(procurementAmount) <= 0
@@ -1048,24 +379,18 @@ const [loadingVendors, setLoadingVendors] = useState(false);
       return;
     }
 
-    // Vendor
     if (!selectedVendor) {
-      setProcurementError(
-        "Please select a vendor."
-      );
+      setProcurementError("Please select a vendor.");
       return;
     }
 
     try {
       setCreatingProcurement(true);
 
-      const token =
-        localStorage.getItem("clairToken");
+      const token = localStorage.getItem("clairToken");
 
       if (!token) {
-        throw new Error(
-          "You are not logged in."
-        );
+        throw new Error("You are not logged in.");
       }
 
       const response = await fetch(
@@ -1079,31 +404,20 @@ const [loadingVendors, setLoadingVendors] = useState(false);
           },
 
           body: JSON.stringify({
-            campaignId:
-              procurementCampaign.id,
-
-            title:
-              procurementTitle.trim(),
-
-            description:
-              procurementDescription.trim(),
-
-            amount:
-              Number(procurementAmount),
-
-            vendorId:
-              Number(selectedVendor),
+            campaignId: procurementCampaign.id,
+            title: procurementTitle.trim(),
+            description: procurementDescription.trim(),
+            amount: Number(procurementAmount),
+            vendorId: Number(selectedVendor),
           }),
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            "Failed to create procurement"
+          data.message || "Failed to create procurement"
         );
       }
 
@@ -1116,15 +430,12 @@ const [loadingVendors, setLoadingVendors] = useState(false);
       setProcurementAmount("");
       setSelectedVendor("");
 
-      // Immediately add the new procurement
-      // to the displayed list.
+      // Immediately update the procurement list
       if (data.procurement) {
-        setProcurements(
-          (previous) => [
-            data.procurement,
-            ...previous,
-          ]
-        );
+        setProcurements((previous) => [
+          data.procurement,
+          ...previous,
+        ]);
       } else {
         await fetchProcurements();
       }
@@ -1134,158 +445,19 @@ const [loadingVendors, setLoadingVendors] = useState(false);
         setShowCreateProcurement(false);
         setProcurementSuccess("");
       }, 1200);
-
     } catch (error) {
       console.error(
         "Create procurement error:",
         error
       );
 
-      setProcurementError(
-        error.message
-      );
-
+      setProcurementError(error.message);
     } finally {
       setCreatingProcurement(false);
     }
   };
 
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-  // -----------------------------------------
-=======
-
-      if (!procurementTitle.trim()) {
-        setProcurementError(
-          "Procurement title is required."
-        );
-        return;
-      }
-
-
-      if (
-        !procurementDescription.trim()
-      ) {
-        setProcurementError(
-          "Procurement description is required."
-        );
-        return;
-      }
-
-
-      if (
-        !procurementAmount ||
-        Number(procurementAmount) <= 0
-      ) {
-        setProcurementError(
-          "Procurement amount must be greater than 0."
-        );
-        return;
-      }
-
-
-      try {
-        setCreatingProcurement(true);
-
-        const token =
-          localStorage.getItem(
-            "clairToken"
-          );
-
-
-        if (!token) {
-          throw new Error(
-            "You are not logged in."
-          );
-        }
-
-
-        const response =
-          await fetch(
-            "http://localhost:5000/api/procurements",
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-
-                Authorization:
-                  `Bearer ${token}`,
-              },
-
-              body: JSON.stringify({
-                campaignId:
-                  procurementCampaign.id,
-
-                title:
-                  procurementTitle.trim(),
-
-                description:
-                  procurementDescription.trim(),
-
-                amount:
-                  Number(procurementAmount),
-
-                vendorId:
-                  selectedVendor
-                    ? Number(selectedVendor)
-                    : undefined,
-              }),
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              "Failed to create procurement"
-          );
-        }
-
-
-        setProcurementSuccess(
-          "Procurement created successfully!"
-        );
-
-
-        setProcurementTitle("");
-        setProcurementDescription("");
-        setProcurementAmount("");
-        setSelectedVendor("");
-
-
-        await fetchProcurements();
-
-
-        setTimeout(() => {
-          setProcurementCampaign(null);
-          setShowCreateProcurement(false);
-          setProcurementSuccess("");
-        }, 1200);
-
-      } catch (error) {
-        console.error(
-          "Create procurement error:",
-          error
-        );
-
-        setProcurementError(
-          error.message
-        );
-
-      } finally {
-        setCreatingProcurement(false);
-      }
-    };
-
-
   // =====================================================
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
   // UI
   // =====================================================
 
@@ -1296,23 +468,16 @@ const [loadingVendors, setLoadingVendors] = useState(false);
         {/* HEADER */}
 
         <div style={styles.header}>
-<<<<<<< HEAD
-=======
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
           <div>
-
             <h1 style={styles.heading}>
               NGO Dashboard
             </h1>
 
             <p style={styles.subheading}>
-              Manage your campaigns and track
-              their progress.
+              Manage your campaigns and track their
+              progress.
             </p>
-
           </div>
-
 
           <button
             style={styles.createButton}
@@ -1329,28 +494,7 @@ const [loadingVendors, setLoadingVendors] = useState(false);
               ? "Close"
               : "+ Create Campaign"}
           </button>
-<<<<<<< HEAD
-<<<<<<< HEAD
         </div>
-
-=======
-
-        </div>
-
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-        {/* CREATE CAMPAIGN FORM */}
-
-        {showCreateCampaign && (
-          <div style={styles.formCard}>
-<<<<<<< HEAD
-=======
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-
-        </div>
-
 
         {/* =================================================
             CREATE CAMPAIGN FORM
@@ -1358,61 +502,19 @@ const [loadingVendors, setLoadingVendors] = useState(false);
 
         {showCreateCampaign && (
           <div style={styles.formCard}>
+            <h2>Create New Campaign</h2>
 
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-            <h2>
-              Create New Campaign
-            </h2>
-
-            <p
-              style={
-                styles.formSubtitle
-              }
-            >
-              Create your campaign on the
-              Sepolia blockchain and save
-              it to Clair.
+            <p style={styles.formSubtitle}>
+              Create your campaign on the Sepolia
+              blockchain and save it to CLAIR.
             </p>
 
-
-            <form
-<<<<<<< HEAD
-<<<<<<< HEAD
-              onSubmit={handleCreateCampaign}
-=======
-              onSubmit={
-                handleCreateCampaign
-              }
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-            >
+            <form onSubmit={handleCreateCampaign}>
 
               {/* TITLE */}
 
-<<<<<<< HEAD
               <div style={styles.formGroup}>
-=======
-              onSubmit={
-                handleCreateCampaign
-              }
-            >
-
-              <div style={styles.formGroup}>
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <label style={styles.label}>
-=======
-              <div
-                style={
-                  styles.formGroup
-                }
-              >
-
-                <label
-                  style={
-                    styles.label
-                  }
-                >
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
                   Campaign Title
                 </label>
 
@@ -1421,55 +523,16 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                   placeholder="e.g. Education for 100 Children"
                   value={title}
                   onChange={(e) =>
-<<<<<<< HEAD
-<<<<<<< HEAD
                     setTitle(e.target.value)
-=======
-                    setTitle(
-                      e.target.value
-                    )
-                  }
-                  style={
-                    styles.input
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-                  }
-                />
-
-              </div>
-
-
-              {/* DESCRIPTION */}
-
-<<<<<<< HEAD
-              <div style={styles.formGroup}>
-=======
-                    setTitle(
-                      e.target.value
-                    )
                   }
                   style={styles.input}
                 />
-
               </div>
 
+              {/* DESCRIPTION */}
 
               <div style={styles.formGroup}>
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <label style={styles.label}>
-=======
-              <div
-                style={
-                  styles.formGroup
-                }
-              >
-
-                <label
-                  style={
-                    styles.label
-                  }
-                >
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
                   Description
                 </label>
 
@@ -1477,81 +540,27 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                   placeholder="Explain what this campaign is about..."
                   value={description}
                   onChange={(e) =>
-                    setDescription(
-                      e.target.value
-                    )
+                    setDescription(e.target.value)
                   }
-                  style={
-                    styles.textarea
-                  }
+                  style={styles.textarea}
                   rows={5}
                 />
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
               </div>
-
 
               {/* CATEGORY */}
 
-<<<<<<< HEAD
               <div style={styles.formGroup}>
-=======
-
-              </div>
-
-
-              <div style={styles.formGroup}>
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <label style={styles.label}>
-=======
-              <div
-                style={
-                  styles.formGroup
-                }
-              >
-
-                <label
-                  style={
-                    styles.label
-                  }
-                >
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
                   Category
                 </label>
 
                 <select
                   value={category}
                   onChange={(e) =>
-<<<<<<< HEAD
-<<<<<<< HEAD
                     setCategory(e.target.value)
-=======
-                    setCategory(
-                      e.target.value
-                    )
-                  }
-                  style={
-                    styles.input
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-                  }
-                >
-<<<<<<< HEAD
-=======
-                    setCategory(
-                      e.target.value
-                    )
                   }
                   style={styles.input}
                 >
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
                   <option value="">
                     Select a category
                   </option>
@@ -1583,46 +592,14 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                   <option value="Other">
                     Other
                   </option>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
                 </select>
-
               </div>
-
 
               {/* TARGET */}
 
-<<<<<<< HEAD
               <div style={styles.formGroup}>
-=======
-
-                </select>
-
-              </div>
-
-
-              <div style={styles.formGroup}>
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
                 <label style={styles.label}>
-                  Target Amount (₹)
-=======
-              <div
-                style={
-                  styles.formGroup
-                }
-              >
-
-                <label
-                  style={
-                    styles.label
-                  }
-                >
                   Target Amount (Sepolia ETH)
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
                 </label>
 
                 <input
@@ -1632,18 +609,9 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                   placeholder="0.01"
                   value={target}
                   onChange={(e) =>
-<<<<<<< HEAD
-<<<<<<< HEAD
                     setTarget(e.target.value)
-=======
-                    setTarget(
-                      e.target.value
-                    )
                   }
-                  style={
-                    styles.input
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-                  }
+                  style={styles.input}
                 />
 
                 <p
@@ -1653,644 +621,332 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                     marginTop: "6px",
                   }}
                 >
-                  The blockchain contract
-                  currently uses ETH for
-                  campaign targets.
+                  The blockchain contract currently
+                  uses ETH for campaign targets.
                 </p>
-
               </div>
-
 
               {/* ERROR */}
-=======
-                    setTarget(
-                      e.target.value
-                    )
-                  }
-                  style={styles.input}
-                />
-
-              </div>
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
               {createError && (
-                <div
-                  style={
-                    styles.errorBox
-                  }
-                >
+                <div style={styles.errorBox}>
                   {createError}
                 </div>
               )}
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
               {/* SUCCESS */}
-=======
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
               {createSuccess && (
-                <div
-                  style={
-                    styles.successBox
-                  }
-                >
+                <div style={styles.successBox}>
                   {createSuccess}
                 </div>
               )}
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
               {/* SUBMIT */}
-=======
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
               <button
                 type="submit"
-<<<<<<< HEAD
                 style={styles.submitButton}
-<<<<<<< HEAD
                 disabled={creatingCampaign}
-=======
-                disabled={
-                  creatingCampaign
-                }
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-                style={
-                  styles.submitButton
-                }
-                disabled={
-                  creatingCampaign
-                }
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
               >
                 {creatingCampaign
                   ? "Creating Campaign..."
                   : "Create Campaign"}
               </button>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
             </form>
-
           </div>
         )}
-
 
         {/* =================================================
             CAMPAIGNS
         ================================================= */}
 
-        <div
-          style={
-            styles.campaignSection
-          }
-        >
-
-          <div
-            style={
-              styles.sectionHeader
-            }
-          >
-
-            <h2>
-              Your Campaigns
-            </h2>
-
-            <button
-<<<<<<< HEAD
-              onClick={fetchCampaigns}
-=======
-
-            </form>
-
-          </div>
-        )}
-
-
-        {/* CAMPAIGNS */}
-
         <div style={styles.campaignSection}>
-
           <div style={styles.sectionHeader}>
-
-            <h2>
-              Your Campaigns
-            </h2>
+            <h2>Your Campaigns</h2>
 
             <button
-              onClick={
-                fetchCampaigns
-              }
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
+              onClick={fetchCampaigns}
               style={styles.refreshButton}
             >
               Refresh
             </button>
-<<<<<<< HEAD
-=======
-              onClick={
-                fetchCampaigns
-              }
-              style={
-                styles.refreshButton
-              }
-            >
-              Refresh
-            </button>
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
           </div>
-
 
           {/* LOADING */}
-=======
-
-          </div>
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
           {loadingCampaigns && (
-            <div
-              style={
-                styles.messageBox
-              }
-            >
+            <div style={styles.messageBox}>
               Loading campaigns...
             </div>
           )}
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
           {/* ERROR */}
 
           {campaignError && (
-            <div
-              style={
-                styles.errorBox
-              }
-            >
-
-              <p>
-                {campaignError}
-              </p>
-
-              <button
-<<<<<<< HEAD
-                onClick={fetchCampaigns}
-=======
-
-          {campaignError && (
             <div style={styles.errorBox}>
-
-              <p>
-                {campaignError}
-              </p>
+              <p>{campaignError}</p>
 
               <button
-                onClick={
-                  fetchCampaigns
-                }
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
+                onClick={fetchCampaigns}
                 style={styles.retryButton}
               >
                 Try Again
               </button>
-<<<<<<< HEAD
-=======
-                onClick={
-                  fetchCampaigns
-                }
-                style={
-                  styles.retryButton
-                }
-              >
-                Try Again
-              </button>
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
             </div>
           )}
-
 
           {/* EMPTY */}
-=======
-
-            </div>
-          )}
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
           {!loadingCampaigns &&
             !campaignError &&
             campaigns.length === 0 && (
-<<<<<<< HEAD
-<<<<<<< HEAD
               <div style={styles.emptyBox}>
-=======
-
-              <div style={styles.emptyBox}>
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-              <div
-                style={
-                  styles.emptyBox
-                }
-              >
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-                <h3>
-                  No campaigns yet
-                </h3>
+                <h3>No campaigns yet</h3>
 
                 <p>
-                  Create your first campaign
-                  to start receiving donations.
+                  Create your first campaign to start
+                  receiving donations.
                 </p>
 
                 <button
                   onClick={() =>
-<<<<<<< HEAD
-<<<<<<< HEAD
                     setShowCreateCampaign(true)
-=======
-                    setShowCreateCampaign(
-                      true
-                    )
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
-                    setShowCreateCampaign(
-                      true
-                    )
                   }
-                  style={
-                    styles.createButton
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
-                  }
+                  style={styles.createButton}
                 >
                   + Create Campaign
                 </button>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
               </div>
             )}
-
 
           {/* CAMPAIGN CARDS */}
-=======
-
-              </div>
-            )}
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
           {!loadingCampaigns &&
             !campaignError &&
             campaigns.length > 0 && (
-<<<<<<< HEAD
-<<<<<<< HEAD
               <div style={styles.campaignGrid}>
-=======
-              <div
-                style={
-                  styles.campaignGrid
-                }
-              >
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
+                {campaigns.map((campaign) => {
+                  const targetAmount =
+                    Number(campaign.target) || 0;
 
-                {campaigns.map(
-                  (campaign) => {
+                  const raisedAmount =
+                    Number(campaign.raisedAmount) || 0;
 
-                    const targetAmount =
-                      Number(
-                        campaign.target
-                      ) || 0;
-
-                    const raisedAmount =
-                      Number(
-                        campaign.raisedAmount
-                      ) || 0;
-
-                    const percentage =
-                      targetAmount > 0
-                        ? Math.min(
-                            100,
-                            Math.round(
-                              (raisedAmount /
-                                targetAmount) *
-                                100
-                            )
+                  const percentage =
+                    targetAmount > 0
+                      ? Math.min(
+                          100,
+                          Math.round(
+                            (raisedAmount /
+                              targetAmount) *
+                              100
                           )
-                        : 0;
+                        )
+                      : 0;
 
-
-                    return (
+                  return (
+                    <div
+                      key={campaign.id}
+                      style={styles.campaignCard}
+                    >
                       <div
-                        key={
-                          campaign.id
-                        }
+                        style={styles.campaignHeader}
+                      >
+                        <h3>{campaign.title}</h3>
+
+                        <span
+                          style={styles.activeBadge}
+                        >
+                          Active
+                        </span>
+                      </div>
+
+                      <p
                         style={
-                          styles.campaignCard
+                          styles.categoryText
                         }
                       >
+                        {campaign.category}
+                      </p>
 
+                      <p
+                        style={
+                          styles.description
+                        }
+                      >
+                        {campaign.description}
+                      </p>
+
+                      <div style={styles.amountRow}>
+                        <span>Raised</span>
+
+                        <strong>
+                          ₹
+                          {raisedAmount.toLocaleString(
+                            "en-IN"
+                          )}
+                        </strong>
+                      </div>
+
+                      <div style={styles.amountRow}>
+                        <span>Target</span>
+
+                        <strong>
+                          ₹
+                          {targetAmount.toLocaleString(
+                            "en-IN"
+                          )}
+                        </strong>
+                      </div>
+
+                      <div
+                        style={
+                          styles.progressBackground
+                        }
+                      >
                         <div
-                          style={
-                            styles.campaignHeader
-                          }
-                        >
+                          style={{
+                            ...styles.progressBar,
+                            width: `${percentage}%`,
+                          }}
+                        />
+                      </div>
 
-                          <h3>
-                            {
-                              campaign.title
-                            }
-                          </h3>
+                      <p
+                        style={
+                          styles.progressText
+                        }
+                      >
+                        {percentage}% funded
+                      </p>
 
-                          <span
-                            style={
-                              styles.activeBadge
-                            }
-                          >
-                            Active
-                          </span>
-
-                        </div>
-
-
-                        <p
-                          style={
-                            styles.categoryText
-                          }
-                        >
-                          {
-                            campaign.category
-                          }
+                      {campaign.ngo && (
+                        <p style={styles.ngoText}>
+                          Created by:{" "}
+                          {campaign.ngo.name}
                         </p>
+                      )}
 
+                      <p style={styles.pledgeText}>
+                        Pledges:{" "}
+                        {campaign._count?.pledges ||
+                          0}
+                      </p>
 
-                        <p
-                          style={
-                            styles.description
-                          }
-                        >
-                          {
-                            campaign.description
-                          }
-                        </p>
+                      {/* BLOCKCHAIN ID */}
 
-
+                      {campaign.blockchainCampaignId && (
                         <div
-                          style={
-                            styles.amountRow
-                          }
+                          style={{
+                            marginTop: "10px",
+                            padding: "10px",
+                            backgroundColor: "#f0fdf4",
+                            borderRadius: "7px",
+                            border:
+                              "1px solid #bbf7d0",
+                          }}
                         >
-
-                          <span>
-                            Raised
-                          </span>
-
-                          <strong>
-                            ₹
-                            {raisedAmount.toLocaleString(
-                              "en-IN"
-                            )}
-                          </strong>
-
-                        </div>
-
-
-                        <div
-                          style={
-                            styles.amountRow
-                          }
-                        >
-
-                          <span>
-                            Target
-                          </span>
-
-                          <strong>
-                            ₹
-                            {targetAmount.toLocaleString(
-                              "en-IN"
-                            )}
-                          </strong>
-
-                        </div>
-
-
-                        <div
-                          style={
-                            styles.progressBackground
-                          }
-                        >
-
-                          <div
-                            style={{
-                              ...styles.progressBar,
-                              width: `${percentage}%`,
-                            }}
-                          />
-
-                        </div>
-
-
-                        <p
-                          style={
-                            styles.progressText
-                          }
-                        >
-                          {percentage}%
-                          funded
-                        </p>
-
-
-                        {campaign.ngo && (
-                          <p
-                            style={
-                              styles.ngoText
-                            }
-                          >
-                            Created by:{" "}
-                            {
-                              campaign
-                                .ngo
-                                .name
-                            }
-                          </p>
-                        )}
-
-
-                        <p
-                          style={
-                            styles.pledgeText
-                          }
-                        >
-                          Pledges:{" "}
-                          {
-                            campaign
-                              ._count
-                              ?.pledges ||
-                            0
-                          }
-                        </p>
-
-
-                        {campaign.blockchainCampaignId && (
                           <p
                             style={{
                               ...styles.pledgeText,
-                              marginTop: "8px",
+                              margin: 0,
+                              fontWeight: "600",
+                              color: "#166534",
                             }}
                           >
-                            Blockchain Campaign ID:{" "}
+                            Blockchain Campaign ID
+                          </p>
+
+                          <p
+                            style={{
+                              ...styles.pledgeText,
+                              marginTop: "4px",
+                              wordBreak: "break-all",
+                            }}
+                          >
                             {
-                              campaign
-                                .blockchainCampaignId
+                              campaign.blockchainCampaignId
                             }
                           </p>
-                        )}
+                        </div>
+                      )}
 
+                      {/* CREATE PROCUREMENT */}
 
-                        <button
-                          onClick={() => {
-                            setProcurementCampaign(
-                              campaign
-                            );
+                      <button
+                        onClick={() => {
+                          setProcurementCampaign(
+                            campaign
+                          );
 
-                            setShowCreateProcurement(
-                              true
-                            );
+                          setShowCreateProcurement(
+                            true
+                          );
 
-                            setProcurementError(
-                              ""
-                            );
-
-                            setProcurementSuccess(
-                              ""
-                            );
-                          }}
-                          style={{
-                            ...styles.createButton,
-                            marginTop:
-                              "15px",
-                            width:
-                              "100%",
-                          }}
-                        >
-                          + Create Procurement
-                        </button>
-
-                      </div>
-                    );
-                  }
-                )}
-
+                          setProcurementError("");
+                          setProcurementSuccess("");
+                          setSelectedVendor("");
+                        }}
+                        style={{
+                          ...styles.createButton,
+                          marginTop: "15px",
+                          width: "100%",
+                        }}
+                      >
+                        + Create Procurement
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-
           {/* =================================================
-              CREATE PROCUREMENT
+              CREATE PROCUREMENT FORM
           ================================================= */}
 
           {showCreateProcurement &&
             procurementCampaign && (
-              <div
-                style={
-                  styles.formCard
-                }
-              >
+              <div style={styles.formCard}>
+                <h2>Create Procurement</h2>
 
-                <h2>
-                  Create Procurement
-                </h2>
-
-                <p
-                  style={
-                    styles.formSubtitle
-                  }
-                >
+                <p style={styles.formSubtitle}>
                   Campaign:{" "}
                   <strong>
-                    {
-                      procurementCampaign.title
-                    }
+                    {procurementCampaign.title}
                   </strong>
                 </p>
-
 
                 <form
                   onSubmit={
                     handleCreateProcurement
                   }
                 >
-
                   {/* TITLE */}
 
-                  <div
-                    style={
-                      styles.formGroup
-                    }
-                  >
-
-                    <label
-                      style={
-                        styles.label
-                      }
-                    >
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>
                       Procurement Title
                     </label>
 
                     <input
                       type="text"
                       placeholder="e.g. 100 School Kits"
-                      value={
-                        procurementTitle
-                      }
+                      value={procurementTitle}
                       onChange={(e) =>
                         setProcurementTitle(
                           e.target.value
                         )
                       }
-                      style={
-                        styles.input
-                      }
+                      style={styles.input}
                     />
-
                   </div>
-
 
                   {/* DESCRIPTION */}
 
-                  <div
-                    style={
-                      styles.formGroup
-                    }
-                  >
-
-                    <label
-                      style={
-                        styles.label
-                      }
-                    >
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>
                       Description
                     </label>
 
@@ -2304,28 +960,15 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                           e.target.value
                         )
                       }
-                      style={
-                        styles.textarea
-                      }
+                      style={styles.textarea}
                       rows={4}
                     />
-
                   </div>
-
 
                   {/* AMOUNT */}
 
-                  <div
-                    style={
-                      styles.formGroup
-                    }
-                  >
-
-                    <label
-                      style={
-                        styles.label
-                      }
-                    >
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>
                       Amount (₹)
                     </label>
 
@@ -2333,982 +976,33 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                       type="number"
                       min="1"
                       placeholder="20000"
-                      value={
-                        procurementAmount
-                      }
+                      value={procurementAmount}
                       onChange={(e) =>
                         setProcurementAmount(
                           e.target.value
                         )
                       }
-                      style={
-                        styles.input
-                      }
+                      style={styles.input}
                     />
-
                   </div>
-
 
                   {/* VENDOR */}
 
-                  <div
-                    style={
-                      styles.formGroup
-                    }
-                  >
-
-                    <label
-                      style={
-                        styles.label
-                      }
-                    >
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>
                       Select Vendor
                     </label>
 
                     <select
-                      value={
-                        selectedVendor
-                      }
+                      value={selectedVendor}
                       onChange={(e) =>
                         setSelectedVendor(
                           e.target.value
                         )
                       }
-                      style={
-                        styles.input
-                      }
-                      disabled={
-                        loadingVendors
-                      }
+                      style={styles.input}
+                      disabled={loadingVendors}
                     >
-
-                      <option value="">
-                        {loadingVendors
-                          ? "Loading vendors..."
-                          : "Select a vendor"}
-                      </option>
-
-                      {vendors.map(
-                        (vendor) => (
-                          <option
-                            key={
-                              vendor.id
-                            }
-                            value={
-                              vendor.id
-                            }
-                          >
-                            {
-                              vendor.name
-                            }{" "}
-                            —{" "}
-                            {
-                              vendor.email
-                            }
-                          </option>
-                        )
-                      )}
-
-                    </select>
-
-                  </div>
-
-
-                  {/* ERROR */}
-
-                  {procurementError && (
-                    <div
-                      style={
-                        styles.errorBox
-                      }
-                    >
-                      {
-                        procurementError
-                      }
-                    </div>
-                  )}
-
-
-                  {/* SUCCESS */}
-
-                  {procurementSuccess && (
-                    <div
-                      style={
-                        styles.successBox
-                      }
-                    >
-                      {
-                        procurementSuccess
-                      }
-                    </div>
-                  )}
-
-
-                  {/* SUBMIT */}
-
-                  <button
-                    type="submit"
-                    style={
-                      styles.submitButton
-                    }
-                    disabled={
-                      creatingProcurement
-                    }
-                  >
-                    {creatingProcurement
-                      ? "Creating Procurement..."
-                      : "Create Procurement"}
-                  </button>
-
-                </form>
-
-              </div>
-            )}
-
-
-          {/* =================================================
-              PROCUREMENT SECTION
-          ================================================= */}
-
-          <div
-            style={
-              styles.campaignSection
-            }
-          >
-
-            <div
-              style={
-                styles.sectionHeader
-              }
-            >
-
-              <h2>
-                Your Procurements
-              </h2>
-
-              <button
-                onClick={
-                  fetchProcurements
-                }
-                style={
-                  styles.refreshButton
-                }
-              >
-                Refresh
-              </button>
-
-            </div>
-
-
-            {/* LOADING */}
-
-            {loadingProcurements && (
-              <div
-                style={
-                  styles.messageBox
-                }
-              >
-                Loading procurements...
-              </div>
-            )}
-
-
-            {/* ERROR */}
-
-            {procurementFetchError && (
-              <div
-                style={
-                  styles.errorBox
-                }
-              >
-                {
-                  procurementFetchError
-                }
-              </div>
-            )}
-
-
-            {/* EMPTY */}
-
-            {!loadingProcurements &&
-              !procurementFetchError &&
-              procurements.length === 0 && (
-                <div
-                  style={
-                    styles.emptyBox
-                  }
-                >
-
-                  <h3>
-                    No procurements yet
-                  </h3>
-
-                  <p>
-                    Procurements you create
-                    for your campaigns will
-                    appear here.
-                  </p>
-
-                </div>
-              )}
-
-
-            {/* PROCUREMENT CARDS */}
-
-            {!loadingProcurements &&
-              !procurementFetchError &&
-              procurements.length > 0 && (
-                <div
-                  style={
-                    styles.campaignGrid
-                  }
-                >
-
-                  {procurements.map(
-                    (procurement) => {
-
-                      const status =
-                        procurement.status;
-
-                      let statusBackground =
-                        "#fef3c7";
-
-                      let statusColor =
-                        "#92400e";
-
-
-                      if (
-                        status ===
-                        "ORDERED"
-                      ) {
-                        statusBackground =
-                          "#dbeafe";
-
-                        statusColor =
-                          "#1d4ed8";
-                      }
-
-
-                      if (
-                        status ===
-                        "DELIVERED"
-                      ) {
-                        statusBackground =
-                          "#dcfce7";
-
-                        statusColor =
-                          "#166534";
-                      }
-
-
-                      if (
-                        status ===
-                        "VERIFICATION_PENDING"
-                      ) {
-                        statusBackground =
-                          "#f3e8ff";
-
-                        statusColor =
-                          "#7e22ce";
-                      }
-
-
-                      if (
-                        status ===
-                        "VERIFIED"
-                      ) {
-                        statusBackground =
-                          "#dcfce7";
-
-                        statusColor =
-                          "#166534";
-                      }
-
-
-                      if (
-                        status ===
-                        "PAYMENT_RELEASED"
-                      ) {
-                        statusBackground =
-                          "#d1fae5";
-
-                        statusColor =
-                          "#047857";
-                      }
-
-
-                      return (
-                        <div
-                          key={
-                            procurement.id
-                          }
-                          style={
-                            styles.campaignCard
-                          }
-                        >
-
-                          {/* HEADER */}
-
-                          <div
-                            style={
-                              styles.campaignHeader
-                            }
-                          >
-
-                            <div>
-
-                              <h3>
-                                {
-                                  procurement
-                                    .title
-                                }
-                              </h3>
-
-                              <p
-                                style={{
-                                  marginTop:
-                                    "5px",
-                                  fontSize:
-                                    "13px",
-                                  color:
-                                    "#666",
-                                }}
-                              >
-                                Procurement #
-                                {
-                                  procurement
-                                    .id
-                                }
-                              </p>
-
-                            </div>
-
-
-                            <span
-                              style={{
-                                ...styles.activeBadge,
-                                backgroundColor:
-                                  statusBackground,
-                                color:
-                                  statusColor,
-                              }}
-                            >
-                              {status.replaceAll(
-                                "_",
-                                " "
-                              )}
-                            </span>
-
-                          </div>
-
-
-                          {/* CAMPAIGN */}
-
-                          <p
-                            style={
-                              styles.categoryText
-                            }
-                          >
-                            Campaign:{" "}
-                            {
-                              procurement
-                                .campaign
-                                ?.title ||
-                              "Unknown Campaign"
-                            }
-                          </p>
-
-
-                          {/* DESCRIPTION */}
-
-                          <p
-                            style={
-                              styles.description
-                            }
-                          >
-                            {
-                              procurement
-                                .description
-                            }
-                          </p>
-
-
-                          {/* AMOUNT */}
-
-                          <div
-                            style={
-                              styles.amountRow
-                            }
-                          >
-
-                            <span>
-                              Amount
-                            </span>
-
-                            <strong>
-                              ₹
-                              {Number(
-                                procurement
-                                  .amount
-                              ).toLocaleString(
-                                "en-IN"
-                              )}
-                            </strong>
-
-                          </div>
-
-
-                          {/* VENDOR */}
-
-                          <div
-                            style={{
-                              marginTop:
-                                "15px",
-                              paddingTop:
-                                "15px",
-                              borderTop:
-                                "1px solid #e5e7eb",
-                            }}
-                          >
-
-                            <p
-                              style={
-                                styles.pledgeText
-                              }
-                            >
-                              <strong>
-                                Vendor:
-                              </strong>{" "}
-                              {
-                                procurement
-                                  .vendor
-                                  ? procurement
-                                      .vendor
-                                      .name
-                                  : "Not assigned"
-                              }
-                            </p>
-
-
-                            {procurement.vendor && (
-                              <p
-                                style={{
-                                  ...styles.pledgeText,
-                                  marginTop:
-                                    "5px",
-                                }}
-                              >
-                                {
-                                  procurement
-                                    .vendor
-                                    .email
-                                }
-                              </p>
-                            )}
-
-                          </div>
-
-
-                          {/* STATUS */}
-
-                          <p
-                            style={{
-                              ...styles.pledgeText,
-                              marginTop:
-                                "12px",
-                            }}
-                          >
-                            <strong>
-                              Status:
-                            </strong>{" "}
-                            {status.replaceAll(
-                              "_",
-                              " "
-                            )}
-                          </p>
-
-                        </div>
-                      );
-                    }
-                  )}
-
-                </div>
-              )}
-
-          </div>
-
-        </div>
-
-<<<<<<< HEAD
-        <span
-          style={{
-            ...styles.activeBadge,
-            backgroundColor: statusBackground,
-            color: statusColor,
-          }}
-        >
-          {status.replaceAll("_", " ")}
-        </span>
-
-      </div>
-
-
-      {/* CAMPAIGN */}
-
-      <p style={styles.categoryText}>
-        Campaign:{" "}
-        {procurement.campaign?.title ||
-          "Unknown Campaign"}
-      </p>
-
-
-      {/* DESCRIPTION */}
-
-      <p style={styles.description}>
-        {procurement.description}
-      </p>
-
-
-      {/* AMOUNT */}
-
-      <div style={styles.amountRow}>
-
-        <span>
-          Amount
-        </span>
-
-        <strong>
-          ₹
-          {Number(
-            procurement.amount
-          ).toLocaleString("en-IN")}
-        </strong>
-
-      </div>
-
-
-      {/* VENDOR */}
-
-      <div
-        style={{
-          marginTop: "15px",
-          paddingTop: "15px",
-          borderTop:
-            "1px solid #e5e7eb",
-        }}
-      >
-
-        <p style={styles.pledgeText}>
-          <strong>Vendor:</strong>{" "}
-          {procurement.vendor
-            ? procurement.vendor.name
-            : "Not assigned"}
-        </p>
-
-        {procurement.vendor && (
-          <p
-            style={{
-              ...styles.pledgeText,
-              marginTop: "5px",
-            }}
-          >
-            {procurement.vendor.email}
-          </p>
-        )}
-
-      </div>
-
-
-      {/* STATUS */}
-
-      <p
-        style={{
-          ...styles.pledgeText,
-          marginTop: "12px",
-        }}
-      >
-        <strong>Status:</strong>{" "}
-        {status.replaceAll("_", " ")}
-      </p>
-
-    </div>
-  );
-})}
-
-      </div>
-    )}
-</div>
-        </div>
-=======
-
-              <div style={styles.campaignGrid}>
-
-                {campaigns.map(
-                  (campaign) => {
-
-                    const targetAmount =
-                      Number(
-                        campaign.target
-                      ) || 0;
-
-                    const raisedAmount =
-                      Number(
-                        campaign.raisedAmount
-                      ) || 0;
-
-                    const percentage =
-                      targetAmount > 0
-                        ? Math.min(
-                            100,
-                            Math.round(
-                              (raisedAmount /
-                                targetAmount) *
-                                100
-                            )
-                          )
-                        : 0;
-
-                    return (
-                      <div
-                        key={
-                          campaign.id
-                        }
-                        style={
-                          styles.campaignCard
-                        }
-                      >
-
-                        <div
-                          style={
-                            styles.campaignHeader
-                          }
-                        >
-
-                          <h3>
-                            {campaign.title}
-                          </h3>
-
-                          <span
-                            style={
-                              styles.activeBadge
-                            }
-                          >
-                            Active
-                          </span>
-
-                        </div>
-
-
-                        <p
-                          style={
-                            styles.categoryText
-                          }
-                        >
-                          {campaign.category}
-                        </p>
-
-
-                        <p
-                          style={
-                            styles.description
-                          }
-                        >
-                          {campaign.description}
-                        </p>
-
-
-                        <div
-                          style={
-                            styles.amountRow
-                          }
-                        >
-
-                          <span>
-                            Raised
-                          </span>
-
-                          <strong>
-                            ₹
-                            {raisedAmount.toLocaleString(
-                              "en-IN"
-                            )}
-                          </strong>
-
-                        </div>
-
-
-                        <div
-                          style={
-                            styles.amountRow
-                          }
-                        >
-
-                          <span>
-                            Target
-                          </span>
-
-                          <strong>
-                            ₹
-                            {targetAmount.toLocaleString(
-                              "en-IN"
-                            )}
-                          </strong>
-
-                        </div>
-
-
-                        <div
-                          style={
-                            styles.progressBackground
-                          }
-                        >
-
-                          <div
-                            style={{
-                              ...styles.progressBar,
-                              width: `${percentage}%`,
-                            }}
-                          />
-
-                        </div>
-
-
-                        <p
-                          style={
-                            styles.progressText
-                          }
-                        >
-                          {percentage}% funded
-                        </p>
-
-
-                        {campaign.ngo && (
-                          <p
-                            style={
-                              styles.ngoText
-                            }
-                          >
-                            Created by:{" "}
-                            {campaign.ngo.name}
-                          </p>
-                        )}
-
-
-                        <p
-                          style={
-                            styles.pledgeText
-                          }
-                        >
-                          Pledges:{" "}
-                          {campaign._count
-                            ?.pledges || 0}
-                        </p>
-
-
-                        <button
-                          onClick={() => {
-                            setProcurementCampaign(
-                              campaign
-                            );
-
-                            setShowCreateProcurement(
-                              true
-                            );
-
-                            setProcurementError(
-                              ""
-                            );
-
-                            setProcurementSuccess(
-                              ""
-                            );
-
-                            setSelectedVendor(
-                              ""
-                            );
-                          }}
-                          style={{
-                            ...styles.createButton,
-                            marginTop: "15px",
-                            width: "100%",
-                          }}
-                        >
-                          + Create Procurement
-                        </button>
-
-                      </div>
-                    );
-                  }
-                )}
-
-              </div>
-            )}
-
-
-          {/* CREATE PROCUREMENT FORM */}
-
-          {showCreateProcurement &&
-            procurementCampaign && (
-
-              <div style={styles.formCard}>
-
-                <h2>
-                  Create Procurement
-                </h2>
-
-                <p
-                  style={
-                    styles.formSubtitle
-                  }
-                >
-                  Campaign:{" "}
-                  <strong>
-                    {
-                      procurementCampaign.title
-                    }
-                  </strong>
-                </p>
-
-
-                <form
-                  onSubmit={
-                    handleCreateProcurement
-                  }
-                >
-
-                  <div
-                    style={
-                      styles.formGroup
-                    }
-                  >
-
-                    <label
-                      style={
-                        styles.label
-                      }
-                    >
-                      Procurement Title
-                    </label>
-
-                    <input
-                      type="text"
-                      placeholder="e.g. 100 School Kits"
-                      value={
-                        procurementTitle
-                      }
-                      onChange={(e) =>
-                        setProcurementTitle(
-                          e.target.value
-                        )
-                      }
-                      style={
-                        styles.input
-                      }
-                    />
-
-                  </div>
-
-
-                  <div
-                    style={
-                      styles.formGroup
-                    }
-                  >
-
-                    <label
-                      style={
-                        styles.label
-                      }
-                    >
-                      Description
-                    </label>
-
-                    <textarea
-                      placeholder="Describe what needs to be purchased..."
-                      value={
-                        procurementDescription
-                      }
-                      onChange={(e) =>
-                        setProcurementDescription(
-                          e.target.value
-                        )
-                      }
-                      style={
-                        styles.textarea
-                      }
-                      rows={4}
-                    />
-
-                  </div>
-
-
-                  <div
-                    style={
-                      styles.formGroup
-                    }
-                  >
-
-                    <label
-                      style={
-                        styles.label
-                      }
-                    >
-                      Amount (₹)
-                    </label>
-
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="20000"
-                      value={
-                        procurementAmount
-                      }
-                      onChange={(e) =>
-                        setProcurementAmount(
-                          e.target.value
-                        )
-                      }
-                      style={
-                        styles.input
-                      }
-                    />
-
-                  </div>
-
-
-                  {/* VENDOR */}
-
-                  <div
-                    style={
-                      styles.formGroup
-                    }
-                  >
-
-                    <label
-                      style={
-                        styles.label
-                      }
-                    >
-                      Select Vendor
-                    </label>
-
-                    <select
-                      value={
-                        selectedVendor
-                      }
-                      onChange={(e) =>
-                        setSelectedVendor(
-                          e.target.value
-                        )
-                      }
-                      style={
-                        styles.input
-                      }
-                      disabled={
-                        loadingVendors
-                      }
-                    >
-
                       <option value="">
                         {loadingVendors
                           ? "Loading vendors..."
@@ -3317,60 +1011,39 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                           : "Select a vendor"}
                       </option>
 
-                      {vendors.map(
-                        (vendor) => (
-
-                          <option
-                            key={
-                              vendor.id
-                            }
-                            value={
-                              vendor.id
-                            }
-                          >
-                            {vendor.name} —{" "}
-                            {vendor.email}
-                          </option>
-
-                        )
-                      )}
-
+                      {vendors.map((vendor) => (
+                        <option
+                          key={vendor.id}
+                          value={vendor.id}
+                        >
+                          {vendor.name} —{" "}
+                          {vendor.email}
+                        </option>
+                      ))}
                     </select>
-
                   </div>
 
+                  {/* ERROR */}
 
                   {procurementError && (
-                    <div
-                      style={
-                        styles.errorBox
-                      }
-                    >
-                      {
-                        procurementError
-                      }
+                    <div style={styles.errorBox}>
+                      {procurementError}
                     </div>
                   )}
 
+                  {/* SUCCESS */}
 
                   {procurementSuccess && (
-                    <div
-                      style={
-                        styles.successBox
-                      }
-                    >
-                      {
-                        procurementSuccess
-                      }
+                    <div style={styles.successBox}>
+                      {procurementSuccess}
                     </div>
                   )}
 
+                  {/* SUBMIT */}
 
                   <button
                     type="submit"
-                    style={
-                      styles.submitButton
-                    }
+                    style={styles.submitButton}
                     disabled={
                       creatingProcurement ||
                       loadingVendors ||
@@ -3381,381 +1054,270 @@ const [loadingVendors, setLoadingVendors] = useState(false);
                       ? "Creating Procurement..."
                       : "Create Procurement"}
                   </button>
-
                 </form>
-
               </div>
             )}
 
+          {/* =================================================
+              PROCUREMENT SECTION
+          ================================================= */}
 
-          {/* PROCUREMENT SECTION */}
-
-          <div
-            style={
-              styles.campaignSection
-            }
-          >
-
-            <div
-              style={
-                styles.sectionHeader
-              }
-            >
-
-              <h2>
-                Your Procurements
-              </h2>
+          <div style={styles.campaignSection}>
+            <div style={styles.sectionHeader}>
+              <h2>Your Procurements</h2>
 
               <button
-                onClick={
-                  fetchProcurements
-                }
-                style={
-                  styles.refreshButton
-                }
+                onClick={fetchProcurements}
+                style={styles.refreshButton}
               >
                 Refresh
               </button>
-
             </div>
 
+            {/* LOADING */}
 
             {loadingProcurements && (
-              <div
-                style={
-                  styles.messageBox
-                }
-              >
+              <div style={styles.messageBox}>
                 Loading procurements...
               </div>
             )}
 
+            {/* ERROR */}
 
             {procurementFetchError && (
-              <div
-                style={
-                  styles.errorBox
-                }
-              >
-                {
-                  procurementFetchError
-                }
+              <div style={styles.errorBox}>
+                {procurementFetchError}
               </div>
             )}
 
+            {/* EMPTY */}
 
             {!loadingProcurements &&
               !procurementFetchError &&
               procurements.length === 0 && (
-
-                <div
-                  style={
-                    styles.emptyBox
-                  }
-                >
-
-                  <h3>
-                    No procurements yet
-                  </h3>
+                <div style={styles.emptyBox}>
+                  <h3>No procurements yet</h3>
 
                   <p>
-                    Procurements you create
-                    for your campaigns will
-                    appear here.
+                    Procurements you create for
+                    your campaigns will appear here.
                   </p>
-
                 </div>
               )}
 
+            {/* PROCUREMENT CARDS */}
 
             {!loadingProcurements &&
               !procurementFetchError &&
               procurements.length > 0 && (
+                <div style={styles.campaignGrid}>
+                  {procurements.map((procurement) => {
+                    const status =
+                      procurement.status;
 
-                <div
-                  style={
-                    styles.campaignGrid
-                  }
-                >
+                    let statusBackground =
+                      "#fef3c7";
 
-                  {procurements.map(
-                    (procurement) => {
+                    let statusColor =
+                      "#92400e";
 
-                      const status =
-                        procurement.status;
+                    if (status === "ORDERED") {
+                      statusBackground =
+                        "#dbeafe";
+                      statusColor =
+                        "#1d4ed8";
+                    }
 
-                      let statusBackground =
-                        "#fef3c7";
+                    if (status === "DELIVERED") {
+                      statusBackground =
+                        "#dcfce7";
+                      statusColor =
+                        "#166534";
+                    }
 
-                      let statusColor =
-                        "#92400e";
+                    if (
+                      status ===
+                      "VERIFICATION_PENDING"
+                    ) {
+                      statusBackground =
+                        "#f3e8ff";
+                      statusColor =
+                        "#7e22ce";
+                    }
 
+                    if (status === "VERIFIED") {
+                      statusBackground =
+                        "#dcfce7";
+                      statusColor =
+                        "#166534";
+                    }
 
-                      if (
-                        status ===
-                        "ORDERED"
-                      ) {
-                        statusBackground =
-                          "#dbeafe";
+                    if (
+                      status ===
+                      "PAYMENT_RELEASED"
+                    ) {
+                      statusBackground =
+                        "#d1fae5";
+                      statusColor =
+                        "#047857";
+                    }
 
-                        statusColor =
-                          "#1d4ed8";
-                      }
+                    return (
+                      <div
+                        key={procurement.id}
+                        style={
+                          styles.campaignCard
+                        }
+                      >
+                        {/* HEADER */}
 
-
-                      if (
-                        status ===
-                        "DELIVERED"
-                      ) {
-                        statusBackground =
-                          "#dcfce7";
-
-                        statusColor =
-                          "#166534";
-                      }
-
-
-                      if (
-                        status ===
-                        "VERIFICATION_PENDING"
-                      ) {
-                        statusBackground =
-                          "#f3e8ff";
-
-                        statusColor =
-                          "#7e22ce";
-                      }
-
-
-                      if (
-                        status ===
-                        "VERIFIED"
-                      ) {
-                        statusBackground =
-                          "#dcfce7";
-
-                        statusColor =
-                          "#166534";
-                      }
-
-
-                      if (
-                        status ===
-                        "PAYMENT_RELEASED"
-                      ) {
-                        statusBackground =
-                          "#d1fae5";
-
-                        statusColor =
-                          "#047857";
-                      }
-
-
-                      return (
                         <div
-                          key={
-                            procurement.id
-                          }
                           style={
-                            styles.campaignCard
+                            styles.campaignHeader
                           }
                         >
-
-                          <div
-                            style={
-                              styles.campaignHeader
-                            }
-                          >
-
-                            <div>
-
-                              <h3>
-                                {
-                                  procurement.title
-                                }
-                              </h3>
-
-                              <p
-                                style={{
-                                  marginTop:
-                                    "5px",
-
-                                  fontSize:
-                                    "13px",
-
-                                  color:
-                                    "#666",
-                                }}
-                              >
-                                Procurement #
-                                {
-                                  procurement.id
-                                }
-                              </p>
-
-                            </div>
-
-
-                            <span
-                              style={{
-                                ...styles.activeBadge,
-
-                                backgroundColor:
-                                  statusBackground,
-
-                                color:
-                                  statusColor,
-                              }}
-                            >
-                              {status.replaceAll(
-                                "_",
-                                " "
-                              )}
-                            </span>
-
-                          </div>
-
-
-                          <p
-                            style={
-                              styles.categoryText
-                            }
-                          >
-                            Campaign:{" "}
-                            {
-                              procurement
-                                .campaign
-                                ?.title ||
-                              "Unknown Campaign"
-                            }
-                          </p>
-
-
-                          <p
-                            style={
-                              styles.description
-                            }
-                          >
-                            {
-                              procurement.description
-                            }
-                          </p>
-
-
-                          <div
-                            style={
-                              styles.amountRow
-                            }
-                          >
-
-                            <span>
-                              Amount
-                            </span>
-
-                            <strong>
-                              ₹
-                              {Number(
-                                procurement.amount
-                              ).toLocaleString(
-                                "en-IN"
-                              )}
-                            </strong>
-
-                          </div>
-
-
-                          {/* VENDOR */}
-
-                          <div
-                            style={{
-                              marginTop:
-                                "15px",
-
-                              paddingTop:
-                                "15px",
-
-                              borderTop:
-                                "1px solid #e5e7eb",
-                            }}
-                          >
+                          <div>
+                            <h3>
+                              {procurement.title}
+                            </h3>
 
                             <p
-                              style={
-                                styles.pledgeText
-                              }
+                              style={{
+                                marginTop: "5px",
+                                fontSize: "13px",
+                                color: "#666",
+                              }}
                             >
-
-                              <strong>
-                                Vendor:
-                              </strong>{" "}
-
-                              {procurement.vendor
-                                ? procurement
-                                    .vendor
-                                    .name
-                                : "Not assigned"}
-
+                              Procurement #
+                              {procurement.id}
                             </p>
-
-
-                            {procurement.vendor && (
-                              <p
-                                style={{
-                                  ...styles.pledgeText,
-                                  marginTop:
-                                    "5px",
-                                }}
-                              >
-                                {
-                                  procurement
-                                    .vendor
-                                    .email
-                                }
-                              </p>
-                            )}
-
                           </div>
 
-
-                          <p
+                          <span
                             style={{
-                              ...styles.pledgeText,
-                              marginTop:
-                                "12px",
+                              ...styles.activeBadge,
+                              backgroundColor:
+                                statusBackground,
+                              color: statusColor,
                             }}
                           >
-
-                            <strong>
-                              Status:
-                            </strong>{" "}
-
                             {status.replaceAll(
                               "_",
                               " "
                             )}
+                          </span>
+                        </div>
 
+                        {/* CAMPAIGN */}
+
+                        <p
+                          style={
+                            styles.categoryText
+                          }
+                        >
+                          Campaign:{" "}
+                          {procurement.campaign
+                            ?.title ||
+                            "Unknown Campaign"}
+                        </p>
+
+                        {/* DESCRIPTION */}
+
+                        <p
+                          style={
+                            styles.description
+                          }
+                        >
+                          {procurement.description}
+                        </p>
+
+                        {/* AMOUNT */}
+
+                        <div
+                          style={
+                            styles.amountRow
+                          }
+                        >
+                          <span>Amount</span>
+
+                          <strong>
+                            ₹
+                            {Number(
+                              procurement.amount
+                            ).toLocaleString(
+                              "en-IN"
+                            )}
+                          </strong>
+                        </div>
+
+                        {/* VENDOR */}
+
+                        <div
+                          style={{
+                            marginTop: "15px",
+                            paddingTop: "15px",
+                            borderTop:
+                              "1px solid #e5e7eb",
+                          }}
+                        >
+                          <p
+                            style={
+                              styles.pledgeText
+                            }
+                          >
+                            <strong>
+                              Vendor:
+                            </strong>{" "}
+                            {procurement.vendor
+                              ? procurement
+                                  .vendor
+                                  .name
+                              : "Not assigned"}
                           </p>
 
+                          {procurement.vendor && (
+                            <p
+                              style={{
+                                ...styles.pledgeText,
+                                marginTop: "5px",
+                              }}
+                            >
+                              {
+                                procurement
+                                  .vendor
+                                  .email
+                              }
+                            </p>
+                          )}
                         </div>
-                      );
-                    }
-                  )}
 
+                        {/* STATUS */}
+
+                        <p
+                          style={{
+                            ...styles.pledgeText,
+                            marginTop: "12px",
+                          }}
+                        >
+                          <strong>
+                            Status:
+                          </strong>{" "}
+                          {status.replaceAll(
+                            "_",
+                            " "
+                          )}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
-
           </div>
-
         </div>
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
-=======
->>>>>>> 8eb19b6 (Integrate blockchain funding flow)
       </div>
     </div>
   );
 }
-
 
 // =====================================================
 // STYLES
@@ -3990,6 +1552,5 @@ const styles = {
     color: "#666",
   },
 };
-
 
 export default NGODashboard;

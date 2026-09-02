@@ -1,10 +1,7 @@
 const express = require("express");
-<<<<<<< HEAD
-=======
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
 const prisma = require("../db/prisma");
 
@@ -17,15 +14,6 @@ const router = express.Router();
 
 
 // =====================================================
-<<<<<<< HEAD
-// UPLOAD DOCUMENT
-// =====================================================
-//
-// Vendor uploads a document for a procurement.
-//
-// For now we store the file URL/path.
-// Actual file storage will be connected next.
-=======
 // FILE UPLOAD CONFIGURATION
 // =====================================================
 
@@ -101,27 +89,19 @@ const upload = multer({
 // The file is stored locally in /uploads.
 // The database stores its relative URL/path.
 //
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 // =====================================================
 
 router.post(
   "/",
   authenticateToken,
   authorizeRoles("VENDOR"),
-<<<<<<< HEAD
-=======
   upload.single("document"),
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
   async (req, res) => {
     try {
       const {
         procurementId,
         type,
-<<<<<<< HEAD
-        fileUrl,
-=======
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       } = req.body;
 
 
@@ -131,14 +111,6 @@ router.post(
 
       if (
         procurementId === undefined ||
-<<<<<<< HEAD
-        !type ||
-        !fileUrl
-      ) {
-        return res.status(400).json({
-          message:
-            "Procurement ID, document type and file URL are required",
-=======
         !type
       ) {
         return res.status(400).json({
@@ -152,7 +124,6 @@ router.post(
         return res.status(400).json({
           message:
             "A document file is required.",
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
         });
       }
 
@@ -164,11 +135,7 @@ router.post(
       if (!Number.isInteger(id)) {
         return res.status(400).json({
           message:
-<<<<<<< HEAD
-            "Invalid procurement ID",
-=======
             "Invalid procurement ID.",
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
         });
       }
 
@@ -182,11 +149,7 @@ router.post(
           where: {
             id,
 
-<<<<<<< HEAD
             // Only the assigned vendor
-=======
-            // Only assigned vendor
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
             // can upload documents.
             vendorId: req.user.id,
 
@@ -198,13 +161,6 @@ router.post(
 
 
       if (!procurement) {
-<<<<<<< HEAD
-        return res.status(404).json({
-          message:
-            "Procurement not found or not available for document submission",
-=======
-        // Delete uploaded file because
-        // the upload is not authorized.
         try {
           fs.unlinkSync(
             req.file.path
@@ -219,24 +175,11 @@ router.post(
         return res.status(404).json({
           message:
             "Procurement not found or not available for document submission.",
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
         });
       }
 
 
       // -----------------------------------------------
-<<<<<<< HEAD
-      // Create document
-      // -----------------------------------------------
-
-      const document =
-        await prisma.document.create({
-          data: {
-            type: type.trim(),
-
-            fileUrl:
-              fileUrl.trim(),
-=======
       // Store document
       // -----------------------------------------------
 
@@ -251,7 +194,6 @@ router.post(
               type.trim(),
 
             fileUrl,
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
             procurementId:
               procurement.id,
@@ -273,19 +215,6 @@ router.post(
             "VERIFICATION_PENDING",
         },
       });
-<<<<<<< HEAD
-      await prisma.verification.create({
-  data: {
-    procurementId: procurement.id,
-    status: "PENDING",
-  },
-});
-
-      res.status(201).json({
-        message:
-          "Document uploaded successfully",
-=======
-
 
       // -----------------------------------------------
       // Create verification record
@@ -316,7 +245,6 @@ router.post(
       return res.status(201).json({
         message:
           "Document uploaded successfully.",
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
         document,
       });
@@ -326,12 +254,6 @@ router.post(
         "Document upload error:",
         error
       );
-
-<<<<<<< HEAD
-      res.status(500).json({
-        message:
-          "Unable to upload document",
-=======
 
       // Delete file if database
       // operation failed.
@@ -355,7 +277,6 @@ router.post(
 
         error:
           error.message,
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       });
     }
   }
@@ -366,14 +287,9 @@ router.post(
 // GET PROCUREMENT DOCUMENTS
 // =====================================================
 //
-<<<<<<< HEAD
-// Vendor can view documents belonging to their
-// procurements.
-=======
 // Vendor or NGO can view documents belonging
 // to their procurements.
 //
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 // =====================================================
 
 router.get(
@@ -395,11 +311,7 @@ router.get(
       ) {
         return res.status(400).json({
           message:
-<<<<<<< HEAD
-            "Invalid procurement ID",
-=======
             "Invalid procurement ID.",
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
         });
       }
 
@@ -427,11 +339,7 @@ router.get(
       if (!procurement) {
         return res.status(404).json({
           message:
-<<<<<<< HEAD
-            "Procurement not found",
-=======
             "Procurement not found.",
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
         });
       }
 
@@ -443,21 +351,11 @@ router.get(
           },
 
           orderBy: {
-<<<<<<< HEAD
             createdAt: "desc",
-=======
-            createdAt:
-              "desc",
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
           },
         });
 
-
-<<<<<<< HEAD
-      res.json({
-=======
       return res.json({
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
         documents,
       });
 
@@ -467,24 +365,14 @@ router.get(
         error
       );
 
-<<<<<<< HEAD
-      res.status(500).json({
-        message:
-          "Unable to fetch documents",
-=======
-
       return res.status(500).json({
         message:
           "Unable to fetch documents.",
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       });
     }
   }
 );
 
-
-<<<<<<< HEAD
-=======
 // =====================================================
 // MULTER ERROR HANDLER
 // =====================================================
@@ -513,6 +401,4 @@ router.use(
   }
 );
 
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 module.exports = router;

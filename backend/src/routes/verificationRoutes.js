@@ -1,10 +1,7 @@
 const express = require("express");
 
 const prisma = require("../db/prisma");
-<<<<<<< HEAD
-=======
 const { GoogleGenAI } = require("@google/genai");
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
 const {
   authenticateToken,
@@ -13,8 +10,6 @@ const {
 
 const router = express.Router();
 
-<<<<<<< HEAD
-=======
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
@@ -37,8 +32,6 @@ function parseAIJson(text) {
     }
   }
 };
-
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
 
 // =====================================================
 // GET VERIFICATION
@@ -115,13 +108,6 @@ router.get(
 
 
 // =====================================================
-<<<<<<< HEAD
-// START VERIFICATION
-// =====================================================
-//
-// For now this is a placeholder.
-// Later this endpoint will call the AI.
-=======
 // START AI VERIFICATION
 // =====================================================
 //
@@ -134,7 +120,7 @@ router.get(
 //
 // Gemini DOES NOT make the final approval.
 // Human approval remains required.
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
+//
 // =====================================================
 
 router.post(
@@ -160,8 +146,6 @@ router.post(
             ngoId: req.user.id,
             status: "VERIFICATION_PENDING",
           },
-<<<<<<< HEAD
-=======
 
           include: {
             campaign: true,
@@ -169,7 +153,6 @@ router.post(
             documents: true,
             verification: true,
           },
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
         });
 
       if (!procurement) {
@@ -193,37 +176,8 @@ router.post(
         });
       }
 
-
-<<<<<<< HEAD
-      // -----------------------------------------------
-      // TEMPORARY AI PLACEHOLDER
-      // -----------------------------------------------
-
-      const aiScore = 0;
-
-      const aiResult =
-        "AI verification has not been connected yet.";
-
-
-=======
       // -------------------------------------------------
       // BILL DATA
-      // -------------------------------------------------
-      //
-      // The frontend can send structured bill information.
-      //
-      // Example:
-      //
-      // {
-      //   "bill": {
-      //      "vendor": "ABC Foods",
-      //      "quantity": 200,
-      //      "amount": 38500,
-      //      "item": "Meal packages",
-      //      "invoiceNumber": "INV-001"
-      //   }
-      // }
-      //
       // -------------------------------------------------
 
       const bill = req.body?.bill;
@@ -366,7 +320,6 @@ prefer FLAG_FOR_REVIEW rather than assuming the bill is valid.
       const aiScore =
         Number(aiResult.confidence) || 0;
 
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       const updatedVerification =
         await prisma.verification.update({
           where: {
@@ -374,27 +327,12 @@ prefer FLAG_FOR_REVIEW rather than assuming the bill is valid.
           },
 
           data: {
-<<<<<<< HEAD
-            status: "PENDING_AI",
-            aiScore,
-            aiResult,
-=======
             status: recommendation,
             aiScore,
             aiResult: JSON.stringify(aiResult),
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
           },
         });
 
-
-<<<<<<< HEAD
-      res.json({
-        message:
-          "Verification started",
-
-        verification:
-          updatedVerification,
-=======
       // -------------------------------------------------
       // RETURN RESULT
       // -------------------------------------------------
@@ -411,20 +349,10 @@ prefer FLAG_FOR_REVIEW rather than assuming the bill is valid.
 
         humanApprovalRequired:
           true,
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       });
 
     } catch (error) {
       console.error(
-<<<<<<< HEAD
-        "Verification error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Unable to start verification",
-=======
         "AI verification error:",
         error
       );
@@ -435,7 +363,6 @@ prefer FLAG_FOR_REVIEW rather than assuming the bill is valid.
 
         error:
           error.message,
->>>>>>> 2d35fa3de61199c075ef1568ce1a9c5f2e5f9970
       });
     }
   }

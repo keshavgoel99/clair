@@ -59,6 +59,123 @@ router.get(
   }
 );
 
+// =====================================================
+// GET DONOR PROCUREMENT TRANSPARENCY
+// =====================================================
+//
+// Donors can view procurements belonging to campaigns
+// they have contributed to.
+//
+// This exposes:
+// Campaign → NGO → Procurement → Vendor → Documents
+// → Verification status
+// =====================================================
+
+router.get(
+  "/donor",
+  authenticateToken,
+  authorizeRoles("DONOR"),
+
+  async (req, res) => {
+    try {
+      // -----------------------------------------------
+      // Find campaigns this donor has contributed to
+      // -----------------------------------------------
+
+      const pledges = await prisma.pledge.findMany({
+        where: {
+          donorId: req.user.id,
+        },
+
+        select: {
+          campaignId: true,
+        },
+      });
+
+      const campaignIds = [
+        ...new Set(
+          pledges.map((pledge) => pledge.campaignId)
+        ),
+      ];
+
+      if (campaignIds.length === 0) {
+        return res.json({
+          procurements: [],
+        });
+      }
+
+      // -----------------------------------------------
+      // Fetch procurements for those campaigns
+      // -----------------------------------------------
+
+      const procurements =
+        await prisma.procurement.findMany({
+          where: {
+            campaignId: {
+              in: campaignIds,
+            },
+          },
+
+          include: {
+            campaign: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+
+            ngo: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+
+            vendor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+
+            documents: true,
+
+            verification: {
+              select: {
+                id: true,
+                status: true,
+                aiScore: true,
+                aiResult: true,
+                reviewedAt: true,
+                createdAt: true,
+              },
+            },
+          },
+
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+      res.json({
+        procurements,
+      });
+
+    } catch (error) {
+      console.error(
+        "Fetch donor procurements error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Unable to fetch procurement transparency data",
+      });
+    }
+  }
+);
 
 // =====================================================
 // CREATE PROCUREMENT

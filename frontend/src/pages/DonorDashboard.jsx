@@ -60,8 +60,9 @@ function DonorDashboard() {
     setPledgeHistoryError,
   ] = useState("");
 
-
-  // -----------------------------------------
+  const [procurements, setProcurements] = useState([]);
+const [loadingProcurements, setLoadingProcurements] = useState(true);
+const [procurementError, setProcurementError] = useState("");
   // TOTAL PLEDGED
   // -----------------------------------------
 
@@ -73,6 +74,16 @@ function DonorDashboard() {
       0
     );
 
+const getCampaignContribution = (campaignId) => {
+  return pledges
+    .filter(
+      (pledge) => Number(pledge.campaignId) === Number(campaignId)
+    )
+    .reduce(
+      (total, pledge) => total + Number(pledge.amount || 0),
+      0
+    );
+};
 
   // -----------------------------------------
   // INITIAL LOAD
@@ -81,6 +92,7 @@ function DonorDashboard() {
   useEffect(() => {
     fetchCampaigns();
     fetchMyPledges();
+    fetchDonorProcurements();
   }, []);
 
 
@@ -210,6 +222,7 @@ function DonorDashboard() {
         setPledges(
           data.pledges || []
         );
+        console.log("DONOR PLEDGES:", data.pledges);
 
       } catch (error) {
         console.error(
@@ -226,6 +239,38 @@ function DonorDashboard() {
       }
     };
 
+    const fetchDonorProcurements = async () => {
+  try {
+    setLoadingProcurements(true);
+    setProcurementError("");
+
+    const token = localStorage.getItem("clairToken");
+
+    const response = await fetch(
+      "http://localhost:5000/api/procurements/donor",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Unable to fetch procurement information"
+      );
+    }
+
+    setProcurements(data.procurements || []);
+  } catch (error) {
+    console.error("Fetch donor procurements error:", error);
+    setProcurementError(error.message);
+  } finally {
+    setLoadingProcurements(false);
+  }
+};
 
   // -----------------------------------------
   // OPEN PLEDGE FORM
@@ -926,6 +971,411 @@ function DonorDashboard() {
         )}
 
       </section>
+
+{/* =====================================================
+    PROCUREMENT TRANSPARENCY
+===================================================== */}
+
+<section style={{ marginTop: "40px" }}>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "20px",
+    }}
+  >
+    <div>
+      <h2
+        style={{
+          margin: 0,
+          fontSize: "24px",
+          color: "#111827",
+        }}
+      >
+        🔍 Fund Utilization & Transparency
+      </h2>
+
+      <p
+        style={{
+          marginTop: "6px",
+          color: "#6b7280",
+          fontSize: "14px",
+        }}
+      >
+        Track how campaign funds are being used — from procurement
+        to vendor delivery and verification.
+      </p>
+    </div>
+
+    <button
+      onClick={fetchDonorProcurements}
+      disabled={loadingProcurements}
+      style={{
+        padding: "9px 14px",
+        borderRadius: "8px",
+        border: "1px solid #d1d5db",
+        background: "#ffffff",
+        cursor: loadingProcurements ? "not-allowed" : "pointer",
+        fontWeight: "600",
+      }}
+    >
+      ↻ Refresh
+    </button>
+  </div>
+
+  {/* Loading */}
+  {loadingProcurements && (
+    <div
+      style={{
+        padding: "30px",
+        textAlign: "center",
+        color: "#6b7280",
+        background: "#f9fafb",
+        borderRadius: "12px",
+      }}
+    >
+      Loading procurement information...
+    </div>
+  )}
+
+  {/* Error */}
+  {!loadingProcurements && procurementError && (
+    <div
+      style={{
+        padding: "16px",
+        background: "#fef2f2",
+        border: "1px solid #fecaca",
+        color: "#991b1b",
+        borderRadius: "10px",
+      }}
+    >
+      {procurementError}
+    </div>
+  )}
+
+  {/* Empty */}
+  {!loadingProcurements &&
+    !procurementError &&
+    procurements.length === 0 && (
+      <div
+        style={{
+          padding: "35px",
+          textAlign: "center",
+          background: "#f9fafb",
+          borderRadius: "12px",
+          border: "1px solid #e5e7eb",
+        }}
+      >
+        <div style={{ fontSize: "32px", marginBottom: "10px" }}>
+          📋
+        </div>
+
+        <strong>No procurement activity yet</strong>
+
+        <p
+          style={{
+            color: "#6b7280",
+            fontSize: "14px",
+          }}
+        >
+          Procurement details will appear here once funds from
+          your supported campaigns are utilized.
+        </p>
+      </div>
+    )}
+
+  {/* Procurement Cards */}
+  {!loadingProcurements &&
+    !procurementError &&
+    procurements.length > 0 && (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: "18px",
+        }}
+      >
+        {procurements.map((procurement) => {
+          const verificationStatus =
+            procurement.verification?.status || "NOT_STARTED";
+
+          return (
+            <div
+              key={procurement.id}
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "14px",
+                padding: "20px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              }}
+            >
+              {/* Campaign */}
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  color: "#6b7280",
+                  textTransform: "uppercase",
+                  marginBottom: "6px",
+                }}
+              >
+                Campaign
+              </div>
+
+              <h3
+                style={{
+                  margin: "0 0 16px",
+                  fontSize: "18px",
+                  color: "#111827",
+                }}
+              >
+                {procurement.campaign?.title || "Unknown Campaign"}
+              </h3>
+              <div
+  style={{
+    padding: "12px 14px",
+    background: "#f0fdf4",
+    border: "1px solid #bbf7d0",
+    borderRadius: "10px",
+    marginBottom: "14px",
+  }}
+>
+  <div
+    style={{
+      fontSize: "11px",
+      fontWeight: "700",
+      color: "#166534",
+      textTransform: "uppercase",
+      marginBottom: "4px",
+    }}
+  >
+    Your Contribution to Campaign
+  </div>
+
+  <div
+    style={{
+      fontSize: "20px",
+      fontWeight: "800",
+      color: "#166534",
+    }}
+  >
+    ₹
+    {getCampaignContribution(
+      procurement.campaign?.id
+    ).toLocaleString("en-IN")}
+  </div>
+</div>
+              {/* Procurement */}
+              <div
+                style={{
+                  padding: "14px",
+                  background: "#f9fafb",
+                  borderRadius: "10px",
+                  marginBottom: "14px",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "700",
+                    color: "#111827",
+                    marginBottom: "5px",
+                  }}
+                >
+                  {procurement.title}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "#6b7280",
+                    lineHeight: "1.5",
+                  }}
+                >
+                  {procurement.description}
+                </div>
+              </div>
+
+              {/* Vendor + Amount */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "12px",
+                  marginBottom: "16px",
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#9ca3af",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Vendor
+                  </div>
+
+                  <div
+                    style={{
+                      fontWeight: "600",
+                      marginTop: "3px",
+                    }}
+                  >
+                    {procurement.vendor?.name || "Not assigned"}
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#9ca3af",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Procurement Value
+                  </div>
+
+                  <div
+                    style={{
+                      fontWeight: "700",
+                      marginTop: "3px",
+                    }}
+                  >
+                    ₹{Number(procurement.amount).toLocaleString("en-IN")}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingTop: "14px",
+                  borderTop: "1px solid #e5e7eb",
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#9ca3af",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Procurement Status
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "4px",
+                      fontWeight: "700",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {procurement.status.replaceAll("_", " ")}
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#9ca3af",
+                      textTransform: "uppercase",
+                      textAlign: "right",
+                    }}
+                  >
+                    Verification
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "4px",
+                      fontWeight: "700",
+                      fontSize: "13px",
+                      textAlign: "right",
+                    }}
+                  >
+                    {verificationStatus.replaceAll("_", " ")}
+                  </div>
+                </div>
+              </div>
+
+              {/* Documents */}
+              {procurement.documents?.length > 0 && (
+                <div style={{ marginTop: "16px" }}>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#9ca3af",
+                      textTransform: "uppercase",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Procurement Proof
+                  </div>
+
+                  {procurement.documents.map((document) => (
+                    <div
+                      key={document.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "9px 10px",
+                        background: "#f9fafb",
+                        borderRadius: "7px",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          color: "#374151",
+                        }}
+                      >
+                        📄{" "}
+                        {document.name ||
+                          document.fileName ||
+                          "Document"}
+                      </span>
+
+                      {(document.url ||
+                        document.fileUrl ||
+                        document.path) && (
+                        <a
+                          href={
+                            document.url ||
+                            document.fileUrl ||
+                            document.path
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            color: "#2563eb",
+                            textDecoration: "none",
+                          }}
+                        >
+                          View
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    )}
+</section>
 
 
       {/* PLEDGE MODAL */}

@@ -1,6 +1,9 @@
-const express = require('express')
-
+﻿const express = require('express')
 const prisma = require('../db/prisma')
+
+const {
+  verifyPledge,
+} = require('../services/blockchainService')
 
 const {
   authenticateToken,
@@ -9,24 +12,10 @@ const {
 
 const router = express.Router()
 
-
-// =====================================================
-// CREATE PLEDGE
-// =====================================================
-// Only authenticated donors can create pledges.
-//
-// If blockchainTx is supplied, the pledge is recorded
-// as LOCKED because the blockchain transaction has been
-// completed by the frontend.
-//
-// donorId ALWAYS comes from the authenticated JWT.
-// =====================================================
-
 router.post(
   '/',
   authenticateToken,
   authorizeRoles('DONOR'),
-
   async (req, res) => {
     try {
       const {
@@ -35,21 +24,7 @@ router.post(
         blockchainTx,
       } = req.body
 
-
-      // -----------------------------------------------
-      // Validate campaign ID
-      // -----------------------------------------------
-
-      if (campaignId === undefined) {
-        return res.status(400).json({
-          message: 'Campaign ID is required',
-        })
-      }
-
-
-      const parsedCampaignId =
-        Number(campaignId)
-
+      const parsedCampaignId = Number(campaignId)
 
       if (
         !Number.isInteger(parsedCampaignId) ||
@@ -60,13 +35,7 @@ router.post(
         })
       }
 
-
-      // -----------------------------------------------
-      // Validate amount
-      // -----------------------------------------------
-
       const pledgeAmount = Number(amount)
-
 
       if (
         !Number.isFinite(pledgeAmount) ||
@@ -76,11 +45,6 @@ router.post(
           message: 'Amount must be a positive number',
         })
       }
-
-
-      // -----------------------------------------------
-      // Validate blockchain transaction hash
-      // -----------------------------------------------
 
       if (
         blockchainTx !== undefined &&
@@ -97,11 +61,6 @@ router.post(
         }
       }
 
-
-      // -----------------------------------------------
-      // Find campaign
-      // -----------------------------------------------
-
       const campaign =
         await prisma.campaign.findUnique({
           where: {
@@ -109,17 +68,11 @@ router.post(
           },
         })
 
-
       if (!campaign) {
         return res.status(404).json({
           message: 'Campaign not found',
         })
       }
-
-
-      // -----------------------------------------------
-      // Check campaign is active
-      // -----------------------------------------------
 
       if (!campaign.active) {
         return res.status(400).json({
@@ -127,16 +80,10 @@ router.post(
         })
       }
 
-
-      // -----------------------------------------------
-      // Find existing pledges
-      // -----------------------------------------------
-
       const existingPledges =
         await prisma.pledge.aggregate({
           where: {
             campaignId: parsedCampaignId,
-
             status: {
               in: [
                 'PLEDGED',
@@ -145,34 +92,19 @@ router.post(
               ],
             },
           },
-
           _sum: {
             amount: true,
           },
         })
 
-
       const alreadyPledged =
-        Number(
-          existingPledges._sum.amount || 0
-        )
-
-
-      // -----------------------------------------------
-      // Calculate remaining campaign amount
-      // -----------------------------------------------
+        Number(existingPledges._sum.amount || 0)
 
       const targetAmount =
         Number(campaign.target)
 
-
       const remainingAmount =
         targetAmount - alreadyPledged
-
-
-      // -----------------------------------------------
-      // Campaign already fully funded
-      // -----------------------------------------------
 
       if (remainingAmount <= 0) {
         return res.status(400).json({
@@ -181,63 +113,76 @@ router.post(
         })
       }
 
-
-      // -----------------------------------------------
-      // Don't allow pledge above remaining target
-      // -----------------------------------------------
-
       if (pledgeAmount > remainingAmount) {
         return res.status(400).json({
           message:
-            `Maximum pledge allowed is ₹${remainingAmount}`,
+            'Maximum pledge allowed is Rs. ' +
+            remainingAmount,
         })
       }
 
+      let pledgeStatus = 'PLEDGED'
 
-      // -----------------------------------------------
-      // Determine pledge status
-      // -----------------------------------------------
-      //
-      // Blockchain transaction exists:
-      //     LOCKED
-      //
-      // No blockchain transaction:
-      //     PLEDGED
-      //
-      // NOTE:
-      // Later we should verify the transaction on-chain
-      // before trusting LOCKED status.
-      // -----------------------------------------------
+      if (blockchainTx) {
+        if (!campaign.blockchainCampaignId) {
+          return res.status(400).json({
+            message:
+              'Campaign is not linked to a blockchain campaign',
+          })
+        }
 
-      const pledgeStatus =
-        blockchainTx
-          ? 'LOCKED'
-          : 'PLEDGED'
+        const donor =
+          await prisma.user.findUnique({
+            where: {
+              id: req.user.id,
+            },
+            select: {
+              walletAddress: true,
+            },
+          })
 
+        if (!donor || !donor.walletAddress) {
+          return res.status(400).json({
+            message:
+              'Donor wallet address is not registered',
+          })
+        }
 
-      // -----------------------------------------------
-      // Create pledge
-      // -----------------------------------------------
-      //
-      // donorId comes from the verified JWT.
-      // The frontend cannot choose the donor.
-      // -----------------------------------------------
+        try {
+          await verifyPledge({
+            transactionHash: blockchainTx,
+            blockchainCampaignId:
+              campaign.blockchainCampaignId,
+            donorWallet:
+              donor.walletAddress,
+            amount: pledgeAmount,
+          })
+
+          pledgeStatus = 'LOCKED'
+        } catch (blockchainError) {
+          console.error(
+            'Blockchain verification failed:',
+            blockchainError
+          )
+
+          return res.status(400).json({
+            message:
+              blockchainError.message ||
+              'Blockchain pledge verification failed',
+          })
+        }
+      }
 
       const pledge =
         await prisma.pledge.create({
           data: {
             amount: pledgeAmount,
-
             donorId: req.user.id,
-
             campaignId: parsedCampaignId,
-
             blockchainTx:
               blockchainTx || null,
-
             status: pledgeStatus,
           },
-
           include: {
             campaign: {
               include: {
@@ -253,44 +198,27 @@ router.post(
           },
         })
 
-
-      // -----------------------------------------------
-      // Response
-      // -----------------------------------------------
-
-      res.status(201).json({
-        message:
-          'Pledge created successfully',
-
+      return res.status(201).json({
+        message: 'Pledge created successfully',
         pledge,
       })
-
     } catch (error) {
       console.error(
         'Create pledge error:',
         error
       )
 
-      res.status(500).json({
-        message:
-          'Unable to create pledge',
+      return res.status(500).json({
+        message: 'Unable to create pledge',
       })
     }
   }
 )
 
-
-// =====================================================
-// GET MY PLEDGES
-// =====================================================
-// Only authenticated donors can view their pledges.
-// =====================================================
-
 router.get(
   '/my',
   authenticateToken,
   authorizeRoles('DONOR'),
-
   async (req, res) => {
     try {
       const pledges =
@@ -298,7 +226,6 @@ router.get(
           where: {
             donorId: req.user.id,
           },
-
           include: {
             campaign: {
               include: {
@@ -312,30 +239,25 @@ router.get(
               },
             },
           },
-
           orderBy: {
             createdAt: 'desc',
           },
         })
 
-
-      res.json({
+      return res.json({
         pledges,
       })
-
     } catch (error) {
       console.error(
         'Get pledges error:',
         error
       )
 
-      res.status(500).json({
-        message:
-          'Unable to fetch pledges',
+      return res.status(500).json({
+        message: 'Unable to fetch pledges',
       })
     }
   }
 )
-
 
 module.exports = router

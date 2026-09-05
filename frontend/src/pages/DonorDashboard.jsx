@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import {
+  connectWallet,
   pledgeToCampaign,
 } from "../blockchain/clairFund";
 
@@ -18,42 +19,35 @@ function DonorDashboard() {
     setCampaignError,
   ] = useState("");
 
-
   const [
     selectedCampaign,
     setSelectedCampaign,
   ] = useState(null);
-
 
   const [
     pledgeAmount,
     setPledgeAmount,
   ] = useState("");
 
-
   const [
     pledging,
     setPledging,
   ] = useState(false);
-
 
   const [
     pledgeError,
     setPledgeError,
   ] = useState("");
 
-
   const [
     pledges,
     setPledges,
   ] = useState([]);
 
-
   const [
     loadingPledges,
     setLoadingPledges,
   ] = useState(true);
-
 
   const [
     pledgeHistoryError,
@@ -61,10 +55,21 @@ function DonorDashboard() {
   ] = useState("");
 
   const [procurements, setProcurements] = useState([]);
-const [loadingProcurements, setLoadingProcurements] = useState(true);
-const [procurementError, setProcurementError] = useState("");
+  const [loadingProcurements, setLoadingProcurements] = useState(true);
+  const [procurementError, setProcurementError] = useState("");
+
+  // =====================================================
+  // DONOR WALLET
+  // =====================================================
+
+  const [walletAddress, setWalletAddress] = useState("");
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState("");
+
+
+  // =====================================================
   // TOTAL PLEDGED
-  // -----------------------------------------
+  // =====================================================
 
   const totalPledged =
     pledges.reduce(
@@ -74,31 +79,173 @@ const [procurementError, setProcurementError] = useState("");
       0
     );
 
-const getCampaignContribution = (campaignId) => {
-  return pledges
-    .filter(
-      (pledge) => Number(pledge.campaignId) === Number(campaignId)
-    )
-    .reduce(
-      (total, pledge) => total + Number(pledge.amount || 0),
-      0
-    );
-};
 
-  // -----------------------------------------
+  // =====================================================
+  // CAMPAIGN CONTRIBUTION
+  // =====================================================
+
+  const getCampaignContribution = (campaignId) => {
+    return pledges
+      .filter(
+        (pledge) =>
+          Number(pledge.campaignId) ===
+          Number(campaignId)
+      )
+      .reduce(
+        (total, pledge) =>
+          total +
+          Number(pledge.amount || 0),
+        0
+      );
+  };
+
+
+  // =====================================================
+  // FETCH SAVED WALLET
+  // =====================================================
+
+  const fetchWallet = async () => {
+    try {
+      const token =
+        localStorage.getItem("clairToken");
+
+      if (!token) {
+        return;
+      }
+
+      const response =
+        await fetch(
+          "http://localhost:5000/api/auth/wallet",
+          {
+            method: "GET",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+          "Unable to fetch wallet"
+        );
+      }
+
+      setWalletAddress(
+        data.walletAddress || ""
+      );
+
+    } catch (error) {
+      console.error(
+        "Error fetching wallet:",
+        error
+      );
+    }
+  };
+
+
+  // =====================================================
+  // CONNECT + SAVE WALLET
+  // =====================================================
+
+  const handleConnectWallet = async () => {
+    try {
+      setWalletLoading(true);
+      setWalletError("");
+
+      const token =
+        localStorage.getItem(
+          "clairToken"
+        );
+
+      if (!token) {
+        throw new Error(
+          "You are not logged in."
+        );
+      }
+
+      const wallet =
+        await connectWallet();
+
+      if (!wallet?.address) {
+        throw new Error(
+          "Unable to get wallet address."
+        );
+      }
+
+      const response =
+        await fetch(
+          "http://localhost:5000/api/auth/wallet",
+          {
+            method: "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              walletAddress:
+                wallet.address,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+          "Unable to save wallet address"
+        );
+      }
+
+      setWalletAddress(
+        data.user?.walletAddress ||
+        wallet.address.toLowerCase()
+      );
+
+    } catch (error) {
+      console.error(
+        "Wallet connection error:",
+        error
+      );
+
+      setWalletError(
+        error.message ||
+        "Unable to connect wallet"
+      );
+
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+
+  // =====================================================
   // INITIAL LOAD
-  // -----------------------------------------
+  // =====================================================
 
   useEffect(() => {
     fetchCampaigns();
     fetchMyPledges();
     fetchDonorProcurements();
+    fetchWallet();
   }, []);
 
 
-  // -----------------------------------------
+  // =====================================================
   // FETCH ACTIVE CAMPAIGNS
-  // -----------------------------------------
+  // =====================================================
 
   const fetchCampaigns =
     async () => {
@@ -117,7 +264,6 @@ const getCampaignContribution = (campaignId) => {
           );
         }
 
-
         const response =
           await fetch(
             "http://localhost:5000/api/campaigns",
@@ -134,18 +280,15 @@ const getCampaignContribution = (campaignId) => {
             }
           );
 
-
         const data =
           await response.json();
-
 
         if (!response.ok) {
           throw new Error(
             data.message ||
-              "Failed to load campaigns"
+            "Failed to load campaigns"
           );
         }
-
 
         setCampaigns(
           data.campaigns || []
@@ -167,9 +310,9 @@ const getCampaignContribution = (campaignId) => {
     };
 
 
-  // -----------------------------------------
+  // =====================================================
   // FETCH MY PLEDGES
-  // -----------------------------------------
+  // =====================================================
 
   const fetchMyPledges =
     async () => {
@@ -182,13 +325,11 @@ const getCampaignContribution = (campaignId) => {
             "clairToken"
           );
 
-
         if (!token) {
           throw new Error(
             "You are not logged in."
           );
         }
-
 
         const response =
           await fetch(
@@ -206,27 +347,23 @@ const getCampaignContribution = (campaignId) => {
             }
           );
 
-
         const data =
           await response.json();
-
 
         if (!response.ok) {
           throw new Error(
             data.message ||
-              "Failed to load pledge history"
+            "Failed to load pledge history"
           );
         }
-
 
         setPledges(
           data.pledges || []
         );
-        console.log("DONOR PLEDGES:", data.pledges);
 
       } catch (error) {
         console.error(
-          "Pledge history error:",
+          "Error loading pledges:",
           error
         );
 
@@ -239,42 +376,77 @@ const getCampaignContribution = (campaignId) => {
       }
     };
 
-    const fetchDonorProcurements = async () => {
-  try {
-    setLoadingProcurements(true);
-    setProcurementError("");
 
-    const token = localStorage.getItem("clairToken");
+  // =====================================================
+  // FETCH DONOR PROCUREMENTS
+  // =====================================================
 
-    const response = await fetch(
-      "http://localhost:5000/api/procurements/donor",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+  const fetchDonorProcurements =
+    async () => {
+      try {
+        setLoadingProcurements(true);
+        setProcurementError("");
+
+        const token =
+          localStorage.getItem(
+            "clairToken"
+          );
+
+        if (!token) {
+          throw new Error(
+            "You are not logged in."
+          );
+        }
+
+        const response =
+          await fetch(
+            "http://localhost:5000/api/procurements/donor",
+            {
+              method: "GET",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+            "Failed to load procurement information"
+          );
+        }
+
+        setProcurements(
+          data.procurements || []
+        );
+
+      } catch (error) {
+        console.error(
+          "Error loading procurements:",
+          error
+        );
+
+        setProcurementError(
+          error.message
+        );
+
+      } finally {
+        setLoadingProcurements(false);
       }
-    );
+    };
 
-    const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(
-        data.message || "Unable to fetch procurement information"
-      );
-    }
-
-    setProcurements(data.procurements || []);
-  } catch (error) {
-    console.error("Fetch donor procurements error:", error);
-    setProcurementError(error.message);
-  } finally {
-    setLoadingProcurements(false);
-  }
-};
-
-  // -----------------------------------------
+  // =====================================================
   // OPEN PLEDGE FORM
-  // -----------------------------------------
+  // =====================================================
 
   const openPledgeForm =
     (campaign) => {
@@ -287,9 +459,9 @@ const getCampaignContribution = (campaignId) => {
     };
 
 
-  // -----------------------------------------
+  // =====================================================
   // CLOSE PLEDGE FORM
-  // -----------------------------------------
+  // =====================================================
 
   const closePledgeForm =
     () => {
@@ -306,127 +478,62 @@ const getCampaignContribution = (campaignId) => {
   // =====================================================
   // HANDLE PLEDGE
   // =====================================================
-  //
-  // IMPORTANT:
-  //
-  // campaign.id
-  //     = PostgreSQL campaign ID
-  //
-  // campaign.blockchainCampaignId
-  //     = ClairFund campaign ID
-  //
-  // We use the blockchain ID for MetaMask and the
-  // PostgreSQL ID when saving the pledge.
-  // =====================================================
 
   const handlePledge =
     async () => {
-      setPledgeError("");
-
-      const amount =
-        Number(pledgeAmount);
-
-
-      // -----------------------------------------
-      // VALIDATE AMOUNT
-      // -----------------------------------------
-
-      if (
-        !Number.isFinite(amount) ||
-        amount <= 0
-      ) {
-        setPledgeError(
-          "Please enter a valid pledge amount."
-        );
-
-        return;
-      }
-
-
-      // -----------------------------------------
-      // VALIDATE CAMPAIGN
-      // -----------------------------------------
-
-      if (!selectedCampaign) {
-        setPledgeError(
-          "No campaign selected."
-        );
-
-        return;
-      }
-
-
-      const blockchainCampaignId =
-        Number(
-          selectedCampaign
-            .blockchainCampaignId
-        );
-
-
-      if (
-        !Number.isInteger(
-          blockchainCampaignId
-        ) ||
-        blockchainCampaignId <= 0
-      ) {
-        setPledgeError(
-          "This campaign is not connected to a blockchain campaign."
-        );
-
-        return;
-      }
-
-
       try {
+        setPledgeError("");
+
+        if (!walletAddress) {
+          throw new Error(
+            "Please connect your MetaMask wallet before making a blockchain pledge."
+          );
+        }
+
+        if (!selectedCampaign) {
+          throw new Error(
+            "No campaign selected."
+          );
+        }
+
+        if (
+          !selectedCampaign.blockchainCampaignId
+        ) {
+          throw new Error(
+            "This campaign is not linked to a blockchain campaign."
+          );
+        }
+
+        const amount =
+          Number(pledgeAmount);
+
+        if (
+          !Number.isFinite(amount) ||
+          amount <= 0
+        ) {
+          throw new Error(
+            "Enter a valid pledge amount."
+          );
+        }
+
         setPledging(true);
 
+        const blockchainResult =
+          await pledgeToCampaign(
+            selectedCampaign.blockchainCampaignId,
+            amount
+          );
 
         const token =
           localStorage.getItem(
             "clairToken"
           );
 
-
         if (!token) {
           throw new Error(
             "You are not logged in."
           );
         }
-
-
-        // =========================================
-        // STEP 1
-        // BLOCKCHAIN PLEDGE
-        // =========================================
-
-        setPledgeError("");
-
-        console.log(
-          "Creating blockchain pledge...",
-          {
-            blockchainCampaignId,
-            amount,
-          }
-        );
-
-
-        const blockchainResult =
-          await pledgeToCampaign(
-            blockchainCampaignId,
-            amount
-          );
-
-
-        console.log(
-          "Blockchain pledge confirmed:",
-          blockchainResult
-        );
-
-
-        // =========================================
-        // STEP 2
-        // SAVE PLEDGE TO DATABASE
-        // =========================================
 
         const response =
           await fetch(
@@ -443,51 +550,35 @@ const getCampaignContribution = (campaignId) => {
               },
 
               body: JSON.stringify({
-                // PostgreSQL campaign ID
                 campaignId:
                   selectedCampaign.id,
 
                 amount,
 
-                // Sepolia transaction hash
                 blockchainTx:
                   blockchainResult.hash,
               }),
             }
           );
 
-
         const data =
           await response.json();
-
 
         if (!response.ok) {
           throw new Error(
             data.message ||
-              "Blockchain pledge succeeded, but the pledge could not be saved to Clair."
+            "Failed to save pledge"
           );
         }
 
-
-        // =========================================
-        // STEP 3
-        // UPDATE UI
-        // =========================================
-
-        setSelectedCampaign(
-          null
-        );
-
+        setSelectedCampaign(null);
         setPledgeAmount("");
-        setPledgeError("");
 
-
-        await fetchCampaigns();
         await fetchMyPledges();
-
+        await fetchCampaigns();
 
         alert(
-          `Pledge successful!\n\nBlockchain transaction:\n${blockchainResult.hash}`
+          `Pledge successful!\n\nTransaction:\n${blockchainResult.hash}`
         );
 
       } catch (error) {
@@ -496,10 +587,9 @@ const getCampaignContribution = (campaignId) => {
           error
         );
 
-
         setPledgeError(
           error.message ||
-            "Unable to create pledge."
+          "Unable to complete pledge"
         );
 
       } finally {
@@ -509,9 +599,11 @@ const getCampaignContribution = (campaignId) => {
 
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-12">
+    <main className="mx-auto max-w-7xl px-6 py-10">
 
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <div>
         <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
@@ -524,7 +616,60 @@ const getCampaignContribution = (campaignId) => {
       </div>
 
 
-      {/* STATISTICS */}
+      {/* =====================================================
+          DONOR WALLET
+      ===================================================== */}
+
+      <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
+
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
+              Blockchain Wallet
+            </p>
+
+            <p className="mt-1 text-sm text-slate-600">
+              Connect your MetaMask wallet to make verified blockchain pledges.
+            </p>
+
+            {walletAddress && (
+              <p className="mt-2 break-all text-xs font-medium text-slate-700">
+                Connected: {walletAddress}
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={
+              handleConnectWallet
+            }
+            disabled={
+              walletLoading
+            }
+            className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {walletLoading
+              ? "Connecting..."
+              : walletAddress
+                ? "Reconnect Wallet"
+                : "Connect MetaMask"}
+          </button>
+
+        </div>
+
+        {walletError && (
+          <p className="mt-3 text-sm font-medium text-red-600">
+            {walletError}
+          </p>
+        )}
+
+      </div>
+
+
+      {/* =====================================================
+          STATISTICS
+      ===================================================== */}
 
       <div className="mt-8 grid gap-5 md:grid-cols-3">
 
@@ -578,7 +723,9 @@ const getCampaignContribution = (campaignId) => {
       </div>
 
 
-      {/* AVAILABLE CAMPAIGNS */}
+      {/* =====================================================
+          AVAILABLE CAMPAIGNS
+      ===================================================== */}
 
       <section className="mt-12">
 
@@ -609,20 +756,14 @@ const getCampaignContribution = (campaignId) => {
         </div>
 
 
-        {/* LOADING */}
-
         {loadingCampaigns && (
           <div className="mt-5 rounded-xl border border-slate-200 bg-white p-8 text-center">
-
             <p className="text-slate-500">
               Loading campaigns...
             </p>
-
           </div>
         )}
 
-
-        {/* ERROR */}
 
         {!loadingCampaigns &&
           campaignError && (
@@ -645,8 +786,6 @@ const getCampaignContribution = (campaignId) => {
           )}
 
 
-        {/* NO CAMPAIGNS */}
-
         {!loadingCampaigns &&
           !campaignError &&
           campaigns.length === 0 && (
@@ -665,8 +804,6 @@ const getCampaignContribution = (campaignId) => {
           )}
 
 
-        {/* CAMPAIGN CARDS */}
-
         {!loadingCampaigns &&
           !campaignError &&
           campaigns.length > 0 && (
@@ -680,12 +817,10 @@ const getCampaignContribution = (campaignId) => {
                       campaign.target
                     ) || 0;
 
-
                   const raised =
                     Number(
                       campaign.raisedAmount
                     ) || 0;
-
 
                   const progress =
                     target > 0
@@ -699,7 +834,6 @@ const getCampaignContribution = (campaignId) => {
                         )
                       : 0;
 
-
                   return (
                     <div
                       key={
@@ -708,16 +842,11 @@ const getCampaignContribution = (campaignId) => {
                       className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
                     >
 
-                      {/* CATEGORY */}
-
                       <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
                         {
                           campaign.category
                         }
                       </p>
-
-
-                      {/* TITLE */}
 
                       <h4 className="mt-2 text-lg font-bold text-slate-900">
                         {
@@ -725,31 +854,20 @@ const getCampaignContribution = (campaignId) => {
                         }
                       </h4>
 
-
-                      {/* NGO */}
-
                       {campaign.ngo && (
                         <p className="mt-1 text-sm text-slate-500">
                           By{" "}
                           {
-                            campaign
-                              .ngo
-                              .name
+                            campaign.ngo.name
                           }
                         </p>
                       )}
-
-
-                      {/* DESCRIPTION */}
 
                       <p className="mt-4 text-sm leading-6 text-slate-600">
                         {
                           campaign.description
                         }
                       </p>
-
-
-                      {/* RAISED */}
 
                       <div className="mt-5 flex justify-between text-sm">
 
@@ -766,9 +884,6 @@ const getCampaignContribution = (campaignId) => {
 
                       </div>
 
-
-                      {/* TARGET */}
-
                       <div className="mt-1 flex justify-between text-sm">
 
                         <span className="text-slate-500">
@@ -784,9 +899,6 @@ const getCampaignContribution = (campaignId) => {
 
                       </div>
 
-
-                      {/* PROGRESS */}
-
                       <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
 
                         <div
@@ -799,38 +911,39 @@ const getCampaignContribution = (campaignId) => {
 
                       </div>
 
-
                       <p className="mt-2 text-xs text-slate-500">
                         {progress}% funded
                       </p>
-
-
-                      {/* BLOCKCHAIN ID */}
 
                       {campaign.blockchainCampaignId && (
                         <p className="mt-3 text-xs text-slate-500">
                           Blockchain Campaign ID:{" "}
                           <span className="font-semibold">
                             {
-                              campaign
-                                .blockchainCampaignId
+                              campaign.blockchainCampaignId
                             }
                           </span>
                         </p>
                       )}
 
-
-                      {/* PLEDGE BUTTON */}
-
                       <button
-                        onClick={() =>
+                        onClick={() => {
+                          if (!walletAddress) {
+                            setWalletError(
+                              "Please connect your MetaMask wallet before making a blockchain pledge."
+                            );
+                            return;
+                          }
+
                           openPledgeForm(
                             campaign
-                          )
-                        }
+                          );
+                        }}
                         className="mt-5 w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
                       >
-                        Pledge to this Campaign
+                        {walletAddress
+                          ? "Pledge to this Campaign"
+                          : "Connect Wallet to Pledge"}
                       </button>
 
                     </div>
@@ -844,14 +957,15 @@ const getCampaignContribution = (campaignId) => {
       </section>
 
 
-      {/* PLEDGE HISTORY */}
+      {/* =====================================================
+          PLEDGE HISTORY
+      ===================================================== */}
 
       <section className="mt-12">
 
         <h3 className="text-xl font-bold text-slate-900">
           Pledge History
         </h3>
-
 
         {pledgeHistoryError && (
           <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-5">
@@ -862,7 +976,6 @@ const getCampaignContribution = (campaignId) => {
 
           </div>
         )}
-
 
         {loadingPledges ? (
           <div className="mt-4 rounded-xl border border-slate-200 bg-white p-8 text-center">
@@ -903,18 +1016,13 @@ const getCampaignContribution = (campaignId) => {
 
                         <h4 className="font-semibold text-slate-900">
                           {
-                            pledge
-                              .campaign
-                              .title
+                            pledge.campaign.title
                           }
                         </h4>
 
                         <p className="mt-1 text-sm text-slate-500">
                           {
-                            pledge
-                              .campaign
-                              .ngo
-                              ?.name
+                            pledge.campaign.ngo?.name
                           }
                         </p>
 
@@ -922,14 +1030,12 @@ const getCampaignContribution = (campaignId) => {
                           <p className="mt-2 break-all text-xs text-slate-500">
                             Tx:{" "}
                             {
-                              pledge
-                                .blockchainTx
+                              pledge.blockchainTx
                             }
                           </p>
                         )}
 
                       </div>
-
 
                       <div className="text-right">
 
@@ -937,12 +1043,11 @@ const getCampaignContribution = (campaignId) => {
                           ₹
                           {Number(
                             pledge.amount ||
-                              0
+                            0
                           ).toLocaleString(
                             "en-IN"
                           )}
                         </p>
-
 
                         <span
                           className={
@@ -972,413 +1077,609 @@ const getCampaignContribution = (campaignId) => {
 
       </section>
 
-{/* =====================================================
-    PROCUREMENT TRANSPARENCY
-===================================================== */}
 
-<section style={{ marginTop: "40px" }}>
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: "20px",
-    }}
-  >
-    <div>
-      <h2
-        style={{
-          margin: 0,
-          fontSize: "24px",
-          color: "#111827",
-        }}
-      >
-        🔍 Fund Utilization & Transparency
-      </h2>
+      {/* =====================================================
+          PROCUREMENT TRANSPARENCY
+      ===================================================== */}
 
-      <p
-        style={{
-          marginTop: "6px",
-          color: "#6b7280",
-          fontSize: "14px",
-        }}
-      >
-        Track how campaign funds are being used — from procurement
-        to vendor delivery and verification.
-      </p>
-    </div>
+      <section style={{ marginTop: "40px" }}>
 
-    <button
-      onClick={fetchDonorProcurements}
-      disabled={loadingProcurements}
-      style={{
-        padding: "9px 14px",
-        borderRadius: "8px",
-        border: "1px solid #d1d5db",
-        background: "#ffffff",
-        cursor: loadingProcurements ? "not-allowed" : "pointer",
-        fontWeight: "600",
-      }}
-    >
-      ↻ Refresh
-    </button>
-  </div>
-
-  {/* Loading */}
-  {loadingProcurements && (
-    <div
-      style={{
-        padding: "30px",
-        textAlign: "center",
-        color: "#6b7280",
-        background: "#f9fafb",
-        borderRadius: "12px",
-      }}
-    >
-      Loading procurement information...
-    </div>
-  )}
-
-  {/* Error */}
-  {!loadingProcurements && procurementError && (
-    <div
-      style={{
-        padding: "16px",
-        background: "#fef2f2",
-        border: "1px solid #fecaca",
-        color: "#991b1b",
-        borderRadius: "10px",
-      }}
-    >
-      {procurementError}
-    </div>
-  )}
-
-  {/* Empty */}
-  {!loadingProcurements &&
-    !procurementError &&
-    procurements.length === 0 && (
-      <div
-        style={{
-          padding: "35px",
-          textAlign: "center",
-          background: "#f9fafb",
-          borderRadius: "12px",
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        <div style={{ fontSize: "32px", marginBottom: "10px" }}>
-          📋
-        </div>
-
-        <strong>No procurement activity yet</strong>
-
-        <p
+        <div
           style={{
-            color: "#6b7280",
-            fontSize: "14px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
           }}
         >
-          Procurement details will appear here once funds from
-          your supported campaigns are utilized.
-        </p>
-      </div>
-    )}
 
-  {/* Procurement Cards */}
-  {!loadingProcurements &&
-    !procurementError &&
-    procurements.length > 0 && (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "18px",
-        }}
-      >
-        {procurements.map((procurement) => {
-          const verificationStatus =
-            procurement.verification?.status || "NOT_STARTED";
+          <div>
 
-          return (
-            <div
-              key={procurement.id}
+            <h2
               style={{
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "14px",
-                padding: "20px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                margin: 0,
+                fontSize: "24px",
+                color: "#111827",
               }}
             >
-              {/* Campaign */}
+              🔍 Fund Utilization & Transparency
+            </h2>
+
+            <p
+              style={{
+                marginTop: "6px",
+                color: "#6b7280",
+                fontSize: "14px",
+              }}
+            >
+              Track how campaign funds are being used — from procurement
+              to vendor delivery and verification.
+            </p>
+
+          </div>
+
+          <button
+            onClick={
+              fetchDonorProcurements
+            }
+            disabled={
+              loadingProcurements
+            }
+            style={{
+              padding: "9px 14px",
+              borderRadius: "8px",
+              border:
+                "1px solid #d1d5db",
+              background: "#ffffff",
+              cursor:
+                loadingProcurements
+                  ? "not-allowed"
+                  : "pointer",
+              fontWeight: "600",
+            }}
+          >
+            ↻ Refresh
+          </button>
+
+        </div>
+
+
+        {loadingProcurements && (
+          <div
+            style={{
+              padding: "30px",
+              textAlign: "center",
+              color: "#6b7280",
+              background: "#f9fafb",
+              borderRadius: "12px",
+            }}
+          >
+            Loading procurement information...
+          </div>
+        )}
+
+
+        {!loadingProcurements &&
+          procurementError && (
+            <div
+              style={{
+                padding: "16px",
+                background: "#fef2f2",
+                border:
+                  "1px solid #fecaca",
+                color: "#991b1b",
+                borderRadius: "10px",
+              }}
+            >
+              {procurementError}
+            </div>
+          )}
+
+
+        {!loadingProcurements &&
+          !procurementError &&
+          procurements.length === 0 && (
+            <div
+              style={{
+                padding: "35px",
+                textAlign: "center",
+                background: "#f9fafb",
+                borderRadius: "12px",
+                border:
+                  "1px solid #e5e7eb",
+              }}
+            >
+
               <div
                 style={{
-                  fontSize: "12px",
-                  fontWeight: "700",
+                  fontSize: "32px",
+                  marginBottom: "10px",
+                }}
+              >
+                📋
+              </div>
+
+              <strong>
+                No procurement activity yet
+              </strong>
+
+              <p
+                style={{
                   color: "#6b7280",
-                  textTransform: "uppercase",
-                  marginBottom: "6px",
+                  fontSize: "14px",
                 }}
               >
-                Campaign
-              </div>
+                Procurement details will appear here once funds from
+                your supported campaigns are utilized.
+              </p>
 
-              <h3
-                style={{
-                  margin: "0 0 16px",
-                  fontSize: "18px",
-                  color: "#111827",
-                }}
-              >
-                {procurement.campaign?.title || "Unknown Campaign"}
-              </h3>
-              <div
-  style={{
-    padding: "12px 14px",
-    background: "#f0fdf4",
-    border: "1px solid #bbf7d0",
-    borderRadius: "10px",
-    marginBottom: "14px",
-  }}
->
-  <div
-    style={{
-      fontSize: "11px",
-      fontWeight: "700",
-      color: "#166534",
-      textTransform: "uppercase",
-      marginBottom: "4px",
-    }}
-  >
-    Your Contribution to Campaign
-  </div>
+            </div>
+          )}
 
-  <div
-    style={{
-      fontSize: "20px",
-      fontWeight: "800",
-      color: "#166534",
-    }}
-  >
-    ₹
-    {getCampaignContribution(
-      procurement.campaign?.id
-    ).toLocaleString("en-IN")}
-  </div>
-</div>
-              {/* Procurement */}
-              <div
-                style={{
-                  padding: "14px",
-                  background: "#f9fafb",
-                  borderRadius: "10px",
-                  marginBottom: "14px",
-                }}
-              >
-                <div
-                  style={{
-                    fontWeight: "700",
-                    color: "#111827",
-                    marginBottom: "5px",
-                  }}
-                >
-                  {procurement.title}
-                </div>
 
-                <div
-                  style={{
-                    fontSize: "13px",
-                    color: "#6b7280",
-                    lineHeight: "1.5",
-                  }}
-                >
-                  {procurement.description}
-                </div>
-              </div>
+        {!loadingProcurements &&
+          !procurementError &&
+          procurements.length > 0 && (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: "18px",
+              }}
+            >
 
-              {/* Vendor + Amount */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                  marginBottom: "16px",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#9ca3af",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Vendor
-                  </div>
+              {procurements.map(
+                (procurement) => {
 
-                  <div
-                    style={{
-                      fontWeight: "600",
-                      marginTop: "3px",
-                    }}
-                  >
-                    {procurement.vendor?.name || "Not assigned"}
-                  </div>
-                </div>
+                  const verificationStatus =
+                    procurement.verification?.status ||
+                    "NOT_STARTED";
 
-                <div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#9ca3af",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Procurement Value
-                  </div>
-
-                  <div
-                    style={{
-                      fontWeight: "700",
-                      marginTop: "3px",
-                    }}
-                  >
-                    ₹{Number(procurement.amount).toLocaleString("en-IN")}
-                  </div>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  paddingTop: "14px",
-                  borderTop: "1px solid #e5e7eb",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#9ca3af",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Procurement Status
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: "4px",
-                      fontWeight: "700",
-                      fontSize: "13px",
-                    }}
-                  >
-                    {procurement.status.replaceAll("_", " ")}
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#9ca3af",
-                      textTransform: "uppercase",
-                      textAlign: "right",
-                    }}
-                  >
-                    Verification
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: "4px",
-                      fontWeight: "700",
-                      fontSize: "13px",
-                      textAlign: "right",
-                    }}
-                  >
-                    {verificationStatus.replaceAll("_", " ")}
-                  </div>
-                </div>
-              </div>
-
-              {/* Documents */}
-              {procurement.documents?.length > 0 && (
-                <div style={{ marginTop: "16px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#9ca3af",
-                      textTransform: "uppercase",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Procurement Proof
-                  </div>
-
-                  {procurement.documents.map((document) => (
+                  return (
                     <div
-                      key={document.id}
+                      key={
+                        procurement.id
+                      }
                       style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "9px 10px",
-                        background: "#f9fafb",
-                        borderRadius: "7px",
-                        marginBottom: "6px",
+                        background:
+                          "#ffffff",
+                        border:
+                          "1px solid #e5e7eb",
+                        borderRadius:
+                          "14px",
+                        padding:
+                          "20px",
+                        boxShadow:
+                          "0 2px 8px rgba(0,0,0,0.05)",
                       }}
                     >
-                      <span
+
+                      <div
                         style={{
-                          fontSize: "13px",
-                          color: "#374151",
+                          fontSize:
+                            "12px",
+                          fontWeight:
+                            "700",
+                          color:
+                            "#6b7280",
+                          textTransform:
+                            "uppercase",
+                          marginBottom:
+                            "6px",
                         }}
                       >
-                        📄{" "}
-                        {document.name ||
-                          document.fileName ||
-                          "Document"}
-                      </span>
+                        Campaign
+                      </div>
 
-                      {(document.url ||
-                        document.fileUrl ||
-                        document.path) && (
-                        <a
-                          href={
-                            document.url ||
-                            document.fileUrl ||
-                            document.path
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      <h3
+                        style={{
+                          margin:
+                            "0 0 16px",
+                          fontSize:
+                            "18px",
+                          color:
+                            "#111827",
+                        }}
+                      >
+                        {
+                          procurement
+                            .campaign
+                            ?.title ||
+                          "Unknown Campaign"
+                        }
+                      </h3>
+
+
+                      <div
+                        style={{
+                          padding:
+                            "12px 14px",
+                          background:
+                            "#f0fdf4",
+                          border:
+                            "1px solid #bbf7d0",
+                          borderRadius:
+                            "10px",
+                          marginBottom:
+                            "14px",
+                        }}
+                      >
+
+                        <div
                           style={{
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            color: "#2563eb",
-                            textDecoration: "none",
+                            fontSize:
+                              "11px",
+                            fontWeight:
+                              "700",
+                            color:
+                              "#166534",
+                            textTransform:
+                              "uppercase",
+                            marginBottom:
+                              "4px",
                           }}
                         >
-                          View
-                        </a>
+                          Your Contribution to Campaign
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize:
+                              "20px",
+                            fontWeight:
+                              "800",
+                            color:
+                              "#166534",
+                          }}
+                        >
+                          ₹
+                          {getCampaignContribution(
+                            procurement
+                              .campaign
+                              ?.id
+                          ).toLocaleString(
+                            "en-IN"
+                          )}
+                        </div>
+
+                      </div>
+
+
+                      <div
+                        style={{
+                          padding:
+                            "14px",
+                          background:
+                            "#f9fafb",
+                          borderRadius:
+                            "10px",
+                          marginBottom:
+                            "14px",
+                        }}
+                      >
+
+                        <div
+                          style={{
+                            fontWeight:
+                              "700",
+                            color:
+                              "#111827",
+                            marginBottom:
+                              "5px",
+                          }}
+                        >
+                          {
+                            procurement.title
+                          }
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize:
+                              "13px",
+                            color:
+                              "#6b7280",
+                            lineHeight:
+                              "1.5",
+                          }}
+                        >
+                          {
+                            procurement.description
+                          }
+                        </div>
+
+                      </div>
+
+
+                      <div
+                        style={{
+                          display:
+                            "grid",
+                          gridTemplateColumns:
+                            "1fr 1fr",
+                          gap:
+                            "12px",
+                          marginBottom:
+                            "16px",
+                        }}
+                      >
+
+                        <div>
+
+                          <div
+                            style={{
+                              fontSize:
+                                "11px",
+                              color:
+                                "#9ca3af",
+                              textTransform:
+                                "uppercase",
+                            }}
+                          >
+                            Vendor
+                          </div>
+
+                          <div
+                            style={{
+                              fontWeight:
+                                "600",
+                              marginTop:
+                                "3px",
+                            }}
+                          >
+                            {
+                              procurement
+                                .vendor
+                                ?.name ||
+                              "Not assigned"
+                            }
+                          </div>
+
+                        </div>
+
+
+                        <div>
+
+                          <div
+                            style={{
+                              fontSize:
+                                "11px",
+                              color:
+                                "#9ca3af",
+                              textTransform:
+                                "uppercase",
+                            }}
+                          >
+                            Procurement Value
+                          </div>
+
+                          <div
+                            style={{
+                              fontWeight:
+                                "700",
+                              marginTop:
+                                "3px",
+                            }}
+                          >
+                            ₹
+                            {Number(
+                              procurement.amount
+                            ).toLocaleString(
+                              "en-IN"
+                            )}
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div
+                        style={{
+                          display:
+                            "flex",
+                          justifyContent:
+                            "space-between",
+                          alignItems:
+                            "center",
+                          paddingTop:
+                            "14px",
+                          borderTop:
+                            "1px solid #e5e7eb",
+                        }}
+                      >
+
+                        <div>
+
+                          <div
+                            style={{
+                              fontSize:
+                                "11px",
+                              color:
+                                "#9ca3af",
+                              textTransform:
+                                "uppercase",
+                            }}
+                          >
+                            Procurement Status
+                          </div>
+
+                          <div
+                            style={{
+                              marginTop:
+                                "4px",
+                              fontWeight:
+                                "700",
+                              fontSize:
+                                "13px",
+                            }}
+                          >
+                            {
+                              procurement.status
+                                .replaceAll(
+                                  "_",
+                                  " "
+                                )
+                            }
+                          </div>
+
+                        </div>
+
+
+                        <div>
+
+                          <div
+                            style={{
+                              fontSize:
+                                "11px",
+                              color:
+                                "#9ca3af",
+                              textTransform:
+                                "uppercase",
+                              textAlign:
+                                "right",
+                            }}
+                          >
+                            Verification
+                          </div>
+
+                          <div
+                            style={{
+                              marginTop:
+                                "4px",
+                              fontWeight:
+                                "700",
+                              fontSize:
+                                "13px",
+                              textAlign:
+                                "right",
+                            }}
+                          >
+                            {
+                              verificationStatus
+                                .replaceAll(
+                                  "_",
+                                  " "
+                                )
+                            }
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      {procurement.documents?.length > 0 && (
+                        <div
+                          style={{
+                            marginTop:
+                              "16px",
+                          }}
+                        >
+
+                          <div
+                            style={{
+                              fontSize:
+                                "11px",
+                              color:
+                                "#9ca3af",
+                              textTransform:
+                                "uppercase",
+                              marginBottom:
+                                "8px",
+                            }}
+                          >
+                            Procurement Proof
+                          </div>
+
+                          {procurement.documents.map(
+                            (document) => (
+                              <div
+                                key={
+                                  document.id
+                                }
+                                style={{
+                                  display:
+                                    "flex",
+                                  justifyContent:
+                                    "space-between",
+                                  alignItems:
+                                    "center",
+                                  padding:
+                                    "9px 10px",
+                                  background:
+                                    "#f9fafb",
+                                  borderRadius:
+                                    "7px",
+                                  marginBottom:
+                                    "6px",
+                                }}
+                              >
+
+                                <span
+                                  style={{
+                                    fontSize:
+                                      "13px",
+                                    color:
+                                      "#374151",
+                                  }}
+                                >
+                                  📄{" "}
+                                  {
+                                    document.name ||
+                                    document.fileName ||
+                                    "Document"
+                                  }
+                                </span>
+
+                                {(document.url ||
+                                  document.fileUrl ||
+                                  document.path) && (
+                                  <a
+                                    href={
+                                      document.url ||
+                                      document.fileUrl ||
+                                      document.path
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      fontSize:
+                                        "12px",
+                                      fontWeight:
+                                        "600",
+                                      color:
+                                        "#2563eb",
+                                      textDecoration:
+                                        "none",
+                                    }}
+                                  >
+                                    View
+                                  </a>
+                                )}
+
+                              </div>
+                            )
+                          )}
+
+                        </div>
                       )}
+
                     </div>
-                  ))}
-                </div>
+                  );
+                }
               )}
+
             </div>
-          );
-        })}
-      </div>
-    )}
-</section>
+          )}
+
+      </section>
 
 
-      {/* PLEDGE MODAL */}
+      {/* =====================================================
+          PLEDGE MODAL
+      ===================================================== */}
 
       {selectedCampaign && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -1482,7 +1783,8 @@ const getCampaignContribution = (campaignId) => {
                   !pledgeAmount ||
                   Number(
                     pledgeAmount
-                  ) <= 0
+                  ) <= 0 ||
+                  !walletAddress
                 }
                 className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
